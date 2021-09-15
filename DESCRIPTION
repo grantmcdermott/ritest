@@ -13,3 +13,5 @@ Description: An experimental port of the `ritest` Stata routine by Florian Hess.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/grantmcdermott/ritest
+BugReports: https://github.com/grantmcdermott/ritest/issues
