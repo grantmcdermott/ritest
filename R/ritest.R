@@ -37,7 +37,10 @@
 #' @examples
 #' library(fixest)
 #' (mod = feols(yield ~ N + P + K | block, data = npk))
-#' ritest('N1', mod, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
+#' mod_ri = ritest('N1', mod, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
+#' mod_ri
+#' plot(mod_ri)
+#' plot(mod_ri, type = 'hist', highlight = 'fill', highlight_par = TRUE)
 ritest = function(resampvar,
                   object,
                   reps = 100,
@@ -201,6 +204,7 @@ ritest = function(resampvar,
   return(out)
 }
 
+
 #' @title A print method for ritest objects
 #' @name print.ritest
 #' @description Printed display of ritest objects. Tries to mimic the display
@@ -236,6 +240,81 @@ print.ritest = function(x, ...) {
   cat(pval_string, "\n")
   cat("\n")
   # invisible(x)
+}
+
+
+#' @title A plot method for ritest objects
+#' @name plot.ritest
+#' @description Nice plots of your ritest objects.
+#' @param x An ritest object.
+#' @param type Character. What type of plot do you want?
+#' @param break Character. Histogram plot only. What type of breaks do you want?
+#'   The default method creates more breaks than the standard R behaviour. You
+#'   can revert to the latter by selecting NULL.
+#' @param highlight Character. How do you want to highlight the H0 rejection
+#'   regions in the distribution tails?
+#' @param highlight_par Logical. Should we highlight the parametric H0 rejection
+#'   regions too?
+#' @param family Character. The font family. Defaults to HersheySans instead of
+#'   R's normal Arial plotting font.
+#' @param ... Other plot arguments. Currently ignored.
+#' @export
+plot.ritest = function(x, type = c('density', 'hist'), breaks = 'auto',
+                       highlight = c('lines', 'fill', 'both', 'none'),
+                       highlight_par = FALSE,
+                       family = NULL, ...) {
+  type = match.arg(type)
+  highlight = match.arg(highlight)
+  if (is.null(family)) family = 'HersheySans'
+  if (type=='density') {
+    dens = density(x$betas)
+    plot(dens,
+         main = '', xlab = '',
+         xlim = range(x$betas, x$beta_par),
+         family = family)
+    if (highlight %in% c('both', 'fill')) {
+      x1 = 1
+      x2 = tail(which(dens$x <= -abs(x$beta_par)), 1)
+      x3 = head(which(dens$x >= abs(x$beta_par)), 1)
+      x4 = length(dens$x)
+      fcol = rgb(1,0,0,0.5)
+      with(dens, polygon(x=c(x[c(x1,x1:x2,x2)]), y= c(0, y[x1:x2], 0), col=fcol, border = FALSE))
+      with(dens, polygon(x=c(x[c(x3,x3:x4,x4)]), y= c(0, y[x3:x4], 0), col=fcol, border = FALSE))
+    }
+  } else {
+    if (is.null(breaks)) {
+      breaks = "Sturges"
+    } else if (breaks=='auto') {
+      nbreaks = min(length(unique(x$betas)), 101)
+      breaks = seq(min(x$betas), max(x$betas), l=nbreaks)
+    }
+
+    hist_df = hist(x$betas, breaks = breaks, plot = FALSE)
+    if (highlight %in% c('both', 'fill')) {
+      hist_col = ifelse(abs(hist_df$breaks) > abs(x$beta_par), rgb(1,0,0,0.5), rgb(0.2,0.2,0.2,0.2))
+    } else {
+      hist_col = rgb(0.2,0.2,0.2,0.2)
+    }
+    plot(hist_df,
+         col = hist_col,
+         border = FALSE,
+         main = NULL, xlab = NULL,
+         xlim = range(x$betas, x$beta_par),
+         family = family)
+  }
+  title(main = paste('Random Inference:', x$resampvar),
+        sub = paste0('Simulated p-val: ',  sprintf('%.3g', x$pval),
+                     '. Parametric p-val: ', sprintf('%.3g', x$pval_par),'.'),
+        cex.sub = 0.75,
+        xlab = 'Simulated values',
+        family = family)
+  if (highlight %in% c('both', 'lines')) {
+    abline(v = x$beta_par, col = "red", lty = 1)
+    abline(v = -x$beta_par, col = "red", lty = 1)
+  }
+  if (highlight_par) {
+    abline(v = sweep(x$ci_par, 2, rowMeans(x$ci_par)), lty = 2, col = 'red')
+  }
 }
 
 

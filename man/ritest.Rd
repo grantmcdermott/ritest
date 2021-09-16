@@ -63,7 +63,10 @@ This function can be used with a regression or classification tree
 \examples{
 library(fixest)
 (mod = feols(yield ~ N + P + K | block, data = npk))
-ritest('N1', mod, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
+mod_ri = ritest('N1', mod, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
+mod_ri
+plot(mod_ri)
+plot(mod_ri, type = 'hist', highlight = 'fill', highlight_par = TRUE)
 }
 \seealso{
 [geom_parttree()], [rpart::rpart()], [partykit::ctree()].
