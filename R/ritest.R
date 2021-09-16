@@ -84,12 +84,42 @@ ritest = function(resampvar,
   split_list = NULL
   # Xtreat_split = NULL
 
+  prep_split_var = function(x) {
+    if (inherits(x, "formula")) {
+      x_string = strsplit(paste0(x)[2], split = ' \\+ ')[[1]]
+    } else {
+      x_string = paste(x)
+    }
+    if (!is.null(fmat) && x_string %in% colnames(fmat)) {
+      ret = fmat[, x_string]
+    } else if (x_string %in% colnames(Xmat)) {
+      ret = Xmat[, x_string]
+    } else {
+      if (is.null(DATA)) {
+        all_vars = do.call('c', sapply(list(Ymat, Xmat, fmat), colnames))
+        all_vars = union(all_vars, x_string) ## probably redundant
+        DATA = eval(object$call$data)
+        DATA = data.frame(DATA)[, all_vars]
+        DATA = DATA[complete.cases(DATA), ]
+        ## Assign to parent env to avoid redoing if possible
+        assign('DATA', DATA)
+      }
+      if (x_string %in% names(DATA)) {
+        ret = model.matrix(~0+., DATA[, x_string, drop=FALSE])
+      } else {
+        stop(paste0('Could not find ', x, '. Please provide a valid input.\n'))
+      }
+    }
+    attr(ret, 'string') = x_string
+    return(ret)
+  }
+
   if (!is.null(strata)) {
-    strata_split = prep_split_var(strata, Ymat=Ymat, Xmat=Xmat, fmat=fmat, DATA=DATA, object = object)
+    strata_split = prep_split_var(strata)
     strata = attr(strata_split, 'string')
     }
   if (!is.null(cluster)) {
-    cluster_split = prep_split_var(cluster, Ymat=Ymat, Xmat=Xmat, fmat=fmat, DATA=DATA, object = object)
+    cluster_split = prep_split_var(cluster)
     cluster = attr(cluster_split, 'string')
     }
 
@@ -318,43 +348,3 @@ plot.ritest = function(x, type = c('density', 'hist'), breaks = 'auto',
   }
 }
 
-
-#' @title Prep split variables
-#' @name prep_split_var
-#' @description Internal function for prepping the split vars, i.e. strata
-#'   and/or clusters. Will extract and assign the underlying data (used in the
-#'   model object) to the parent environment if required.
-#' @param x String or one-sided formula.
-#' @param ... Additional helpers objects, e.g. from a model.matrix.
-#' @NoRd
-prep_split_var = function(x, ...) {
-  dots = list(...)
-  Ymat = dots$Ymat; Xmat = dots$Xmat; fmat = dots$fmat; DATA = dots$DATA; object = dots$object
-  if (inherits(x, "formula")) {
-    x_string = strsplit(paste0(x)[2], split = ' \\+ ')[[1]]
-  } else {
-    x_string = paste(x)
-  }
-  if (!is.null(fmat) && x_string %in% colnames(fmat)) {
-    ret = fmat[, x_string]
-  } else if (x_string %in% colnames(Xmat)) {
-    ret = Xmat[, x_string]
-  } else {
-    if (is.null(DATA)) {
-      all_vars = do.call('c', sapply(list(Ymat, Xmat, fmat), colnames))
-      all_vars = union(all_vars, x_string) ## probably redundant
-      DATA = eval(object$call$data)
-      DATA = data.frame(DATA)[, all_vars]
-      DATA = DATA[complete.cases(DATA), ]
-      ## Assign to parent env to avoid redoing if possible
-      assign('DATA', DATA)
-    }
-    if (x_string %in% names(DATA)) {
-      ret = model.matrix(~0+., DATA[, x_string, drop=FALSE])
-    } else {
-      stop(paste0('Could not find ', x, '. Please provide a valid input.\n'))
-    }
-  }
-  attr(ret, 'string') = x_string
-  return(ret)
-}
