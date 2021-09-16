@@ -14,14 +14,14 @@
 #' @param reps Integer. The number of repetitions (permutations) in the RI
 #'   simulation. Default is 100, but you probably want more that that. (Alwyn
 #'   Young has suggested at least 2000 in a research setting.)
-#' @param pvals Character. How should the p-values should be computed? The
-#'   default is "both", which means that two-sided p-values will be computed.
-#'   Alternatively, users can specify one-sided p-values with either "left" or
-#'   "right".
 #' @param strata Character or one-sided formula. Permute `resampvar` within
 #'   strata? See Details and Examples below.
 #' @param cluster Character or one-sided formula. Keep `resampvar` constant
-#'   within clusters? See Details and Examples below.
+#'   within clusters? See Details and Examples below.#'
+#' @param pvals Character. How should the test values should be computed? The
+#'   default is "both", which means that two-sided p-values will be computed.
+#'   Alternatively, users can specify one-sided p-values with either "left" or
+#'   "right".
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param seed Integer. Random seed for reproducible results.
 #' @param verbose Logical. Display the underlying model `object` summary and
@@ -166,13 +166,6 @@ ritest = function(resampvar,
     split_list = list(strata = strata_split, cluster = cluster_split)
   }
 
-  # ## Split the treatment variable by the appropriate strata and/or cluster vars
-  # if (!is.null(split_list)) {
-  #   # Xtreat_split = split(Xmat, split_list)
-  #   Xtreat_split = split(Xtreat, split_list)
-  #   # Xtreat_split[sapply(Xtreat_split, function(x) length(x)==0)] = NULL
-  # }
-
   if (!is.null(split_list)) {
     DT = data.table(cbind(Xtreat, strata_split, cluster_split))
     colnames(DT) = c('treat', c('strata', 'cluster')[!sapply(split_list, is.null)])
@@ -189,9 +182,6 @@ ritest = function(resampvar,
       function(i) {
         if (!is.null(split_list)) {
           if(is.null(cluster)) {
-            ## Base
-            # Xtreat_samp = unsplit(lapply(Xtreat_split, sample), split_list)
-            # Might as well use data.table
             Xtreat_samp = DT[DT[ , .I[sample(.N,.N)] , by = strata]$V1, treat]
             Xtreat_samp = as.matrix(Xtreat_samp)
           } else {
@@ -205,13 +195,6 @@ ritest = function(resampvar,
             DT[, newt := nafill(newt, type = "locf"), by=.(strata, cluster)]
             setorder(DT, orig_order) ## Back to original order for fitting
             Xtreat_samp = as.matrix(DT[, 'newt'])
-
-            ## Base
-            # Xtreat_samp =
-            #   unsplit(lapply(Xtreat_split, function(x) {
-            #     ifelse(length(x)<=1, x, replace(x, seq_along(x), sample(x, 1)))
-            #   }),
-            #   split_list)
           }
         } else {
           Xtreat_samp = sample(Xtreat)
@@ -227,7 +210,6 @@ ritest = function(resampvar,
     )
 
   ## Parametric values
-  # par_vals = coeftable(object)[rownames(coeftable(object))==resampvar, ]
   beta_par = coeftable(object)[resampvar, 'Estimate']
   pval_par = coeftable(object)[resampvar, 'Pr(>|t|)']
 
@@ -332,20 +314,20 @@ print.ritest = function(x, verbose = FALSE, ...) {
 #' @description Nice plots of your ritest objects.
 #' @param x An ritest object.
 #' @param type Character. What type of plot do you want?
-#' @param break Character. Histogram plot only. What type of breaks do you want?
-#'   The default method creates more breaks than the standard R behaviour. You
-#'   can revert to the latter by selecting NULL.
 #' @param highlight Character. How do you want to highlight the H0 rejection
 #'   regions in the distribution tails?
 #' @param highlight_par Logical. Should we highlight the parametric H0 rejection
 #'   regions too?
-#' @param family Character. The font family. Defaults to HersheySans instead of
-#'   R's normal Arial plotting font.
+#' @param breaks Character. Histogram plot only. What type of breaks do you
+#'   want? The default method creates more breaks than the standard R behaviour.
+#'   You can revert to the latter by selecting NULL.
+#' @param family Character. The font family. Defaults to 'HersheySans' instead
+#'   of R's normal Arial plotting font.
 #' @param ... Other plot arguments. Currently ignored.
 #' @export
-plot.ritest = function(x, type = c('density', 'hist'), breaks = 'auto',
+plot.ritest = function(x, type = c('density', 'hist'),
                        highlight = c('lines', 'fill', 'both', 'none'),
-                       highlight_par = FALSE,
+                       highlight_par = FALSE,  breaks = 'auto',
                        family = NULL, ...) {
   type = match.arg(type)
   highlight = match.arg(highlight)
