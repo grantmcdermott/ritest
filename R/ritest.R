@@ -18,10 +18,10 @@
 #'   default is "both", which means that two-sided p-values will be computed.
 #'   Alternatively, users can specify one-sided p-values with either "left" or
 #'   "right".
-#' @param strata Character or one-sided formula. Permute `resampvar` with strata
+#' @param strata Character or one-sided formula. Permute `resampvar` within
 #'   strata? See Details and Examples below.
-#' @param cluster Character or one-sided formula. Keep `resampvar` constant with
-#'   clusters? See Details and Examples below.
+#' @param cluster Character or one-sided formula. Keep `resampvar` constant
+#'   within clusters? See Details and Examples below.
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param seed Integer. Random seed for reproducible results.
 #' @param verbose Logical. Display the underlying model `object` summary and
@@ -42,11 +42,17 @@
 #' @export
 #' @examples
 #' library(fixest)
-#' (mod = feols(yield ~ N + P + K | block, data = npk))
-#' mod_ri = ritest('N1', mod, reps = 1e3, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
-#' mod_ri
+#' mod = feols(yield ~ N + P + K | block, data = npk)
+#'
+#' # Conduct RI on the 'N' (nitrogen) coefficient. We'll do 1,000 simulations
+#' # and permute within the 'block' variable strata. The 'verbose = TRUE'
+#' # argument simply prints the results upon completion.
+#' mod_ri = ritest('N', mod, reps = 1e3, strata = ~block, verbose = TRUE)
+#'
+#' # We can also plot the results and various options are available to
+#' # customise the appearance.
 #' plot(mod_ri)
-#' plot(mod_ri, type = 'hist', highlight = 'fill', highlight_par = TRUE)
+#' plot(mod_ri, highlight_par = TRUE) ## Add the parametric CI lines
 ritest = function(resampvar,
                   object,
                   reps = 100,

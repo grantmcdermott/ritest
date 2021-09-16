@@ -4,10 +4,13 @@
 \alias{print.ritest}
 \title{A print method for ritest objects}
 \usage{
-\method{print}{ritest}(x, ...)
+\method{print}{ritest}(x, verbose = FALSE, ...)
 }
 \arguments{
 \item{x}{An ritest object.}
+
+\item{verbose}{Logical. Should we display the the original model summary too?
+Default is FALSE.}
 
 \item{...}{Currently ignored.}
 }
