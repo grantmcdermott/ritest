@@ -24,6 +24,8 @@
 #'   clusters? See Details and Examples below.
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param seed Integer. Random seed for reproducible results.
+#' @param verbose Logical. Display the underlying model `object` summary and
+#'   `ritest` return value? Default is `FALSE`.
 #' @param ... Additional arguments. Currently ignored.
 #'
 #' @details This function is experimental and functionality is still quite
@@ -41,7 +43,7 @@
 #' @examples
 #' library(fixest)
 #' (mod = feols(yield ~ N + P + K | block, data = npk))
-#' mod_ri = ritest('N1', mod, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
+#' mod_ri = ritest('N1', mod, reps = 1e3, strata = ~block) ## We need 'N1' b/c that's the factored name in the model
 #' mod_ri
 #' plot(mod_ri)
 #' plot(mod_ri, type = 'hist', highlight = 'fill', highlight_par = TRUE)
@@ -55,6 +57,7 @@ ritest = function(resampvar,
                   # h0 = NULL,
                   level = 0.95,
                   seed = NULL,
+                  verbose = FALSE,
                   ...) {
 
   pvals = match.arg(pvals)
@@ -65,7 +68,14 @@ ritest = function(resampvar,
     Ymat = object$model[, 1]
   } else if (inherits(object, c('fixest', 'fixest_multi'))) {
     Ymat = model.matrix(object, type = 'lhs', as.matrix = TRUE)
+  } else {
+    stop('\nModel or object class not currently supported. See help documentation.\n')
   }
+
+  object_summ = summary(object, lean = TRUE)
+  object_summ_string = paste(capture.output(object_summ), collapse = '\n')
+  call_string = paste(deparse(object$call), collapse = '')
+  call_string = gsub("\"", "\'", trimws(gsub("\\s+", " ", call_string)))
 
   Xmat = model.matrix(object)
 
@@ -77,8 +87,26 @@ ritest = function(resampvar,
   }
 
   Xnames = colnames(Xmat)
-  # resampvar_orig = resampvar
-  resampvar_pos = grep(resampvar, Xnames)
+  resampvar_pos = match(resampvar, Xnames)
+  if (is.na(resampvar_pos)) {
+    resampvar_orig = resampvar
+    resampvar = paste0(resampvar, 1) ## Catch for single-level numeric factors.
+    resampvar_pos = match(resampvar, Xnames)
+    if (is.na(resampvar_pos)) {
+      if (verbose) cat(object_summ_string)
+      stop('\n\nThe specified resampling variable "', resampvar,
+           '" was not found among the model explanatory variables:\n\n',
+           call_string,
+           '\n\nIf you transformed this variable directly in the model call, ',
+           'e.g. `I(x^2)`, then please use the transformed string as a verbatim ',
+           'argument instead, e.g. `ritest(resampvar = "I(x^2)", ...)`.',
+           '\n\nSimilarly, if you want to resample a factor variable with more ',
+           'than two levels then you should specify the level that you want, ',
+           'e.g. `ritest(resampvar = "cyl6", ...)`. To see a list of all ',
+           'possible coefficients and their verbatim names, consider re-running ',
+           'this function with the `verbose = TRUE` argument.')
+      }
+  }
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
   Xtreat = Xmat[,resampvar_pos]
 
@@ -217,9 +245,6 @@ ritest = function(resampvar,
   ci_par = confint(object)
   ci_par = ci_par[rownames(ci_par)==resampvar,]
 
-  call_string = paste(deparse(object$call), collapse = '')
-  call_string = gsub("\"", "\'", trimws(gsub("\\s+", " ", call_string)))
-
   out = list(call = call_string,
              resampvar = resampvar,
              reps = reps,
@@ -230,11 +255,14 @@ ritest = function(resampvar,
              se = se,
              ci = ci,
              betas = betas,
+             object_summ_string = object_summ_string,
              pval_par = pval_par,
              beta_par = beta_par,
              ci_par = ci_par)
 
   class(out) = "ritest"
+
+  if (verbose) print(out, verbose = TRUE)
 
   return(out)
 }
@@ -245,9 +273,11 @@ ritest = function(resampvar,
 #' @description Printed display of ritest objects. Tries to mimic the display
 #'   of the equivalent Stata routine.
 #' @param x An ritest object.
+#' @param verbose Logical. Should we display the the original model summary too?
+#'   Default is FALSE.
 #' @param ... Currently ignored.
 #' @export
-print.ritest = function(x, ...) {
+print.ritest = function(x, verbose = FALSE, ...) {
 
   ri_mat = c(`T(obs)` = x$beta_par, `c` = x$count, `n` = x$reps,
              `p=c/n` = x$pval, `SE(p)` = x$se)
@@ -262,6 +292,19 @@ print.ritest = function(x, ...) {
   } else {
     "Note: c = #{T >= T(obs)}"
   }
+
+  if (verbose) {
+    cat("******************",
+        "* ORIGINAL MODEL *",
+        "******************",
+        sep = "\n")
+    cat("\n", x$object_summ_string, "\n\n", sep = "")
+    cat("******************",
+        "* RITEST RESULTS *",
+        "******************",
+        sep = "\n")
+  }
+
 
   cat("\nCall: ", x$call, "\n", sep = "")
   cat("Res. var(s): ", x$resampvar, "\n", sep = "")
