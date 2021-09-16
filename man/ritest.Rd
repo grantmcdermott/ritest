@@ -45,9 +45,8 @@ clusters? See Details and Examples below.}
 \item{...}{Additional arguments. Currently ignored.}
 }
 \value{
-A data frame comprising seven columns: the leaf node, its path, a set
-  of coordinates understandable to `ggplot2` (i.e., xmin, xmax, ymin, ymax),
-  and a final column corresponding to the predicted value for that leaf.
+An list object of class `ritest`. Default print and plotting methods
+  are supported.
 }
 \description{
 Perform random inference (RI) testing on a model object, e.g. a
@@ -57,8 +56,13 @@ Perform random inference (RI) testing on a model object, e.g. a
   a lot faster.
 }
 \details{
-This function can be used with a regression or classification tree
-  containing one or (at most) two numeric predictors.
+This function is experimental and functionality is still quite
+  limited. Albeit, that it does support the most likely use case for RI on a
+  regression model, i.e. permutation testing of a coefficient value. Present
+  limitations include: only `lm` and `fixest::feols` model objects are
+  supported; only one permutation (RI) test is allowed; and only one strata
+  and/or cluster variable, respectively, can be supplied. I hope to resolve
+  these limitations as time permits.
 }
 \examples{
 library(fixest)
@@ -69,5 +73,5 @@ plot(mod_ri)
 plot(mod_ri, type = 'hist', highlight = 'fill', highlight_par = TRUE)
 }
 \seealso{
-[geom_parttree()], [rpart::rpart()], [partykit::ctree()].
+[print.ritest()], [plot.ritest()]
 }
