@@ -7,7 +7,7 @@ Author@R: c(person(given = "Grant",
             role = c("aut", "cre"),
             email = "grantmcd@uoregon.edu",
             comment = c(ORCID = "0000-0001-7883-8573")))
-Maintainer: grantmcd@uoregon.edu
+Maintainer: <grantmcd@uoregon.edu>
 Description: An experimental port of the `ritest` Stata routine by Florian Hess.
     Aims to support a variety of model classes once it is fully baked.
 License: What license is it under?
@@ -15,3 +15,9 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/grantmcdermott/ritest
 BugReports: https://github.com/grantmcdermott/ritest/issues
+Imports: 
+    data.table
+Suggests: 
+    tinytest,
+    fixest
+RoxygenNote: 7.1.1
