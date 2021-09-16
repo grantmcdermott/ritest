@@ -201,6 +201,44 @@ ritest = function(resampvar,
   return(out)
 }
 
+#' @title A print method for ritest objects
+#' @name print.ritest
+#' @description Printed display of ritest objects. Tries to mimic the display
+#'   of the equivalent Stata routine.
+#' @param x An ritest object.
+#' @param ... Currently ignored.
+#' @export
+print.ritest = function(x, ...) {
+
+  ri_mat = c(`T(obs)` = x$beta_par, `c` = x$count, `n` = x$reps,
+             `p=c/n` = x$pval, `SE(p)` = x$se)
+  ri_mat = c(ri_mat, x$ci)
+  ri_mat_nms = names(ri_mat)
+  ri_mat = sprintf(ri_mat, fmt = '%.4g')
+  names(ri_mat) = ri_mat_nms
+  pval_string = if (attr(x$pval, 'side')=='both') {
+    "Note: c = #{|T| >= |T(obs)|}"
+  } else if (attr(x$pval, 'side')=='left') {
+    "Note: c = #{T <= T(obs)}"
+  } else {
+    "Note: c = #{T >= T(obs)}"
+  }
+
+  cat("\nCall: ", x$call, "\n", sep = "")
+  cat("Res. var(s): ", x$resampvar, "\n", sep = "")
+  cat("Strata var(s): ", x$strata, "\n", sep = "")
+  cat("Cluster var(s): ", x$cluster, "\n", sep = "")
+  cat("Num. reps: ", x$reps, "\n", sep = "")
+  cat("---", "\n")
+  print(ri_mat, quote = FALSE, print.gap = 2L)
+  cat("---", "\n")
+  cat("Note: Confidence interval is with respect to p=c/n", "\n")
+  cat(pval_string, "\n")
+  cat("\n")
+  # invisible(x)
+}
+
+
 #' @title Prep split variables
 #' @name prep_split_var
 #' @description Internal function for prepping the split vars, i.e. strata
