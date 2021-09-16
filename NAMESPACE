@@ -3,4 +3,4 @@
 S3method(plot,ritest)
 S3method(print,ritest)
 export(ritest)
-importFrom(data.table,":=")
+import(data.table)

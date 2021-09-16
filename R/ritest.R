@@ -32,7 +32,7 @@
 #' @return A data frame comprising seven columns: the leaf node, its path, a set
 #'   of coordinates understandable to `ggplot2` (i.e., xmin, xmax, ymin, ymax),
 #'   and a final column corresponding to the predicted value for that leaf.
-#' @importFrom data.table :=
+#' @import data.table
 #' @export
 #' @examples
 #' library(fixest)
@@ -93,9 +93,9 @@ ritest = function(resampvar,
     cluster = attr(cluster_split, 'string')
     }
 
+  ## Next line mostly for indexing
   if (!is.null(strata_split) || !is.null(cluster_split)) {
     split_list = list(strata = strata_split, cluster = cluster_split)
-    split_list[sapply(split_list, is.null)] = NULL
   }
 
   # ## Split the treatment variable by the appropriate strata and/or cluster vars
@@ -106,35 +106,36 @@ ritest = function(resampvar,
   # }
 
   if (!is.null(split_list)) {
-  # if (!is.null(cluster)) {
-    DT = data.table::data.table(cbind(Xtreat, strata_split, cluster_split))
-    colnames(DT) = c(resampvar, strata, cluster)
+    DT = data.table(cbind(Xtreat, strata_split, cluster_split))
+    colnames(DT) = c('treat', c('strata', 'cluster')[!sapply(split_list, is.null)])
     DT[, orig_order := seq_len(.N)]
+    # Add dummy column in case where clustering without strata
+    if (is.null(strata_split)) {
+      DT[, strata := TRUE]
+    }
   }
 
   betas =
     sapply(
       1:reps,
       function(i) {
-        if (!is.null(strata) || !is.null(cluster)) {
-        # if (!is.null(Xtreat_split)) {
+        if (!is.null(split_list)) {
           if(is.null(cluster)) {
             ## Base
             # Xtreat_samp = unsplit(lapply(Xtreat_split, sample), split_list)
             # Might as well use data.table
-            Xtreat_samp = DT[DT[ , .I[sample(.N,.N)] , by = strata]$V1, ..resampvar]
+            Xtreat_samp = DT[DT[ , .I[sample(.N,.N)] , by = strata]$V1, treat]
             Xtreat_samp = as.matrix(Xtreat_samp)
           } else {
 
             DT$rorder = runif(nrow(DT))
-            DT[data.table::rowidv(DT, c(strata, cluster))==1, ind := 1] ## Get first obs by strata+cluster
-            data.table::setorderv(DT, c(strata, 'ind'), na.last = TRUE) ## Put these first obs at top w/in each strata
-            DT[!is.na(ind), nn := data.table::rowidv(DT[!is.na(ind)], c(strata, 'ind'))]
-            data.table::setorderv(DT, c(strata, 'ind', 'rorder'), na.last=TRUE) ## shuffle
-            DT[!is.na(ind), newt := .SD[nn], by = c(strata, 'ind'), .SDcols = resampvar]
-            data.table::setorderv(DT, c(strata, cluster, 'ind'), na.last = TRUE)
-            DT[, newt := data.table::nafill(newt, type = "locf"), by = c(strata, cluster)]
-            data.table::setorder(DT, orig_order) ## Back to original order for fitting
+            DT[, ind := rowid(strata, cluster)==1L] ## Get first obs by strata+cluster
+            DT[(ind), nn := rowid(strata, ind)]
+            setorder(DT, strata, ind, rorder) ## shuffle
+            DT[(ind), newt := treat[nn], by = .(strata, ind)]
+            setorder(DT, strata, cluster, -ind, na.last = TRUE)
+            DT[, newt := nafill(newt, type = "locf"), by=.(strata, cluster)]
+            setorder(DT, orig_order) ## Back to original order for fitting
             Xtreat_samp = as.matrix(DT[, 'newt'])
 
             ## Base
