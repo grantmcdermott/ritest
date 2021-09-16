@@ -7,9 +7,9 @@
 \method{plot}{ritest}(
   x,
   type = c("density", "hist"),
-  breaks = "auto",
   highlight = c("lines", "fill", "both", "none"),
   highlight_par = FALSE,
+  breaks = "auto",
   family = NULL,
   ...
 )
@@ -25,14 +25,14 @@ regions in the distribution tails?}
 \item{highlight_par}{Logical. Should we highlight the parametric H0 rejection
 regions too?}
 
-\item{family}{Character. The font family. Defaults to HersheySans instead of
-R's normal Arial plotting font.}
+\item{breaks}{Character. Histogram plot only. What type of breaks do you
+want? The default method creates more breaks than the standard R behaviour.
+You can revert to the latter by selecting NULL.}
+
+\item{family}{Character. The font family. Defaults to 'HersheySans' instead
+of R's normal Arial plotting font.}
 
 \item{...}{Other plot arguments. Currently ignored.}
-
-\item{break}{Character. Histogram plot only. What type of breaks do you want?
-The default method creates more breaks than the standard R behaviour. You
-can revert to the latter by selecting NULL.}
 }
 \description{
 Nice plots of your ritest objects.

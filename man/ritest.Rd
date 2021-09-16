@@ -28,7 +28,7 @@ only `stats::lm` and `fixest::feols` models are supported.}
 simulation. Default is 100, but you probably want more that that. (Alwyn
 Young has suggested at least 2000 in a research setting.)}
 
-\item{pvals}{Character. How should the p-values should be computed? The
+\item{pvals}{Character. How should the test values should be computed? The
 default is "both", which means that two-sided p-values will be computed.
 Alternatively, users can specify one-sided p-values with either "left" or
 "right".}
@@ -37,7 +37,7 @@ Alternatively, users can specify one-sided p-values with either "left" or
 strata? See Details and Examples below.}
 
 \item{cluster}{Character or one-sided formula. Keep `resampvar` constant
-within clusters? See Details and Examples below.}
+within clusters? See Details and Examples below.#'}
 
 \item{level}{Numeric. The desired confidence level. Default if 0.95.}
 
@@ -55,9 +55,9 @@ An list object of class `ritest`. Default print and plotting methods
 \description{
 Perform random inference (RI) testing on a model object, e.g. a
   coefficient from a linear regression model. It tries to mimic the `ritest`
-  Stata routine (Hess, 2017) in its design and functionality. Only a subset
-  of this functionality is currently supported. However, it does appear to be
-  a lot faster.
+  Stata routine (Heß, 2017) in its design and functionality. The package is
+  quite experimental and only a subset of this functionality is currently
+  supported. However, it does appear to be significantly faster.
 }
 \details{
 This function is experimental and functionality is still quite
@@ -81,6 +81,11 @@ mod_ri = ritest('N', mod, reps = 1e3, strata = ~block, verbose = TRUE)
 # customise the appearance.
 plot(mod_ri)
 plot(mod_ri, highlight_par = TRUE) ## Add the parametric CI lines
+}
+\references{
+Simon Heß (2017)
+\cite{Robust Randomization inference with Stata: A guide and software}, The
+Stata Journal, 17, Number 3, pp. 630--651
 }
 \seealso{
 [print.ritest()], [plot.ritest()]

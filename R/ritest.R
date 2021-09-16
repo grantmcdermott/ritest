@@ -3,9 +3,9 @@
 #'
 #' @description Perform random inference (RI) testing on a model object, e.g. a
 #'   coefficient from a linear regression model. It tries to mimic the `ritest`
-#'   Stata routine (Hess, 2017) in its design and functionality. Only a subset
-#'   of this functionality is currently supported. However, it does appear to be
-#'   a lot faster.
+#'   Stata routine (Heß, 2017) in its design and functionality. The package is
+#'   quite experimental and only a subset of this functionality is currently
+#'   supported. However, it does appear to be significantly faster.
 #'
 #' @param resampvar Character. The name of the variable (coefficient) that you want
 #'   to test. At present, only a single variable is permitted.
@@ -35,6 +35,9 @@
 #'   supported; only one permutation (RI) test is allowed; and only one strata
 #'   and/or cluster variable, respectively, can be supplied. I hope to resolve
 #'   these limitations as time permits.
+#' @references Simon Heß (2017)
+#' \cite{Robust Randomization inference with Stata: A guide and software}, The
+#' Stata Journal, 17, Number 3, pp. 630--651
 #' @return An list object of class `ritest`. Default print and plotting methods
 #'   are supported.
 #' @seealso [print.ritest()], [plot.ritest()]
