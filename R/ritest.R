@@ -23,6 +23,10 @@
 #'   Alternatively, users can specify one-sided p-values with either "left" or
 #'   "right".
 #' @param level Numeric. The desired confidence level. Default if 0.95.
+#' @param stack Logical. Should the permuted data be stacked in memory? Ignored
+#'   if neither `strata` or `cluster` are defined. See Details.
+#' @param parallel Logical. Should the permuted fits be executed in parallel?
+#'   Passed to `parallel::mclapply` and thus ignored if Windows is detected.
 #' @param seed Integer. Random seed for reproducible results.
 #' @param verbose Logical. Display the underlying model `object` summary and
 #'   `ritest` return value? Default is `FALSE`.
@@ -66,11 +70,27 @@ ritest = function(resampvar,
                   # h0 = NULL,
                   level = 0.95,
                   seed = NULL,
+                  stack = FALSE,
+                  parallel = TRUE,
                   verbose = FALSE,
                   ...) {
 
   pvals = match.arg(pvals)
-  if(!is.null(seed)) set.seed(seed)
+
+  if(!is.null(seed)) {
+    RNGkind("L'Ecuyer-CMRG")
+    set.seed(seed)
+    }
+
+  if (.Platform$OS.type == "windows") {
+    parallel = FALSE
+    # cl = parallel::makeCluster(cores)
+    # parallel::clusterEvalQ(cl, c(library(data.table)))
+    # parallel::clusterExport(cl, c("y", "f"), envir=environment())
+    # on.exit(parallel::stopCluster(cl))
+    # function(X, FUN, ...) parallel::parLapply(cl = cl,
+    #                                           X, FUN, ...)
+  }
 
   if (inherits(object, c('lm'))) {
     # Ymat = object$model[, 1, drop = FALSE]
@@ -113,7 +133,7 @@ ritest = function(resampvar,
            'than two levels then you should specify the level that you want, ',
            'e.g. `ritest(resampvar = "cyl6", ...)`. To see a list of all ',
            'possible coefficients and their verbatim names, consider re-running ',
-           'this function with the `verbose = TRUE` argument.')
+           'the `ritest` function with the `verbose = TRUE` argument.')
       }
   }
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
@@ -173,44 +193,76 @@ ritest = function(resampvar,
     DT = data.table(cbind(Xtreat, strata_split, cluster_split))
     colnames(DT) = c('treat', c('strata', 'cluster')[!sapply(split_list, is.null)])
     DT[, orig_order := seq_len(.N)]
-    # Add dummy column in case where clustering without strata
+    # Add dummy column in cases where we are clustering without strata
     if (is.null(strata_split)) {
       DT[, strata := TRUE]
     }
+
+    DT_prep = function(DT) {
+      setkey(DT, .ii, strata)
+      if(is.null(cluster)) {
+        DT_prepped = DT[DT[ , .I[sample(.N,.N)] , by = .(.ii, strata)]$V1,
+                        .(treat_samp = treat),
+                        keyby = .ii]
+      } else {
+        DT2 = DT[rowid(.ii, strata, cluster)==1L]
+        DT2[, nn := rowid(.ii, strata)]
+        DT2[, treat_samp := treat[sample(nn)], by = .(.ii, strata)]
+        DT_prepped = DT[DT2[, .(.ii, strata, cluster, treat_samp)],
+                        on = .(.ii, strata, cluster)]
+        setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
+        DT_prepped = DT_prepped[, .(.ii, treat_samp)]#; gc()
+        setkey(DT_prepped, .ii)
+      }
+      DT_prepped = DT_prepped[,.(Xtreat_samp = list(as.matrix(treat_samp))), by=.ii]
+      return(DT_prepped)
+    }
+
+    ## stacked?
+    if (stack) {
+      DT = rbindlist(lapply(1:reps, function(ii) {DT; DT$.ii = ii; DT}))
+      DT = DT_prep(DT)
+    }
+
   }
 
-  betas =
-    sapply(
-      1:reps,
-      function(i) {
-        if (!is.null(split_list)) {
-          if(is.null(cluster)) {
-            Xtreat_samp = DT[DT[ , .I[sample(.N,.N)] , by = strata]$V1, treat]
-            Xtreat_samp = as.matrix(Xtreat_samp)
-          } else {
+  ## Simulation function
+  ri_sims =
+    function(i) {
 
-            DT$rorder = runif(nrow(DT))
-            DT[, ind := rowid(strata, cluster)==1L] ## Get first obs by strata+cluster
-            DT[(ind), nn := rowid(strata, ind)]
-            setorder(DT, strata, ind, rorder) ## shuffle
-            DT[(ind), newt := treat[nn], by = .(strata, ind)]
-            setorder(DT, strata, cluster, -ind, na.last = TRUE)
-            DT[, newt := nafill(newt, type = "locf"), by=.(strata, cluster)]
-            setorder(DT, orig_order) ## Back to original order for fitting
-            Xtreat_samp = as.matrix(DT[, 'newt'])
-          }
-        } else {
-          Xtreat_samp = sample(Xtreat)
+      ## First get our appropriately permuted treatment variable
+      if (is.null(split_list)) { ## Case 1. No strata or clustering vars. Also means cannot be stacked.
+        ## Sample the treatment variable
+        Xtreat_samp = sample(Xtreat)
+      } else { ## Case 2. Strata and/or cluster vars defined. Can also be stacked.
+        if (!stack) {
+          ## For non-stacked data we'll prep on the fly during each iteration
+          DT$.ii = i
+          DT = DT_prep(DT)
         }
-        if (is.null(fmat)) {
-          coefficients(.lm.fit(cbind(Xtreat_samp, Xmat[, onames]), Ymat))[1]
-        } else {
-          Xtreat_samp_dm = demean(Xtreat_samp, fmat)
-          coefficients(.lm.fit(cbind(Xtreat_samp_dm, Xmat_dm[, onames]), Ymat_dm))[1]
-        }
-
+        ## Sample the treatment variable
+        Xtreat_samp = DT[.ii==i, Xtreat_samp[[1]]]
       }
-    )
+
+      ## Then fit on the permuted data
+      if (!is.null(fmat)) {
+        ## We need to FE demean the sampled treatment vector
+        Xtreat_samp_dm = demean(Xtreat_samp, fmat, nthreads = 1)
+        beta_samp = coefficients(.lm.fit(cbind(Xtreat_samp_dm, Xmat_dm[, onames]), Ymat_dm))[1]
+      } else {
+        beta_samp = coefficients(.lm.fit(cbind(Xtreat_samp, Xmat[, onames]), Ymat))[1]
+      }
+
+      return(beta_samp)
+    }
+
+  ## Run the simulations
+  if (parallel) {
+    betas = parallel::mclapply(1:reps, ri_sims, mc.cores = parallel::detectCores())
+    betas = simplify2array(betas)
+  } else {
+    betas = sapply(1:reps, ri_sims)
+  }
 
   ## Parametric values
   beta_par = coeftable(object)[resampvar, 'Estimate']

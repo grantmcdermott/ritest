@@ -13,6 +13,8 @@ ritest(
   cluster = NULL,
   level = 0.95,
   seed = NULL,
+  stack = FALSE,
+  parallel = TRUE,
   verbose = FALSE,
   ...
 )
@@ -42,6 +44,12 @@ within clusters? See Details and Examples below.#'}
 \item{level}{Numeric. The desired confidence level. Default if 0.95.}
 
 \item{seed}{Integer. Random seed for reproducible results.}
+
+\item{stack}{Logical. Should the permuted data be stacked in memory? Ignored
+if neither `strata` or `cluster` are defined. See Details.}
+
+\item{parallel}{Logical. Should the permuted fits be executed in parallel?
+Passed to `parallel::mclapply` and thus ignored if Windows is detected.}
 
 \item{verbose}{Logical. Display the underlying model `object` summary and
 `ritest` return value? Default is `FALSE`.}
