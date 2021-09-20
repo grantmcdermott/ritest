@@ -15,6 +15,8 @@ ritest(
   seed = NULL,
   stack = FALSE,
   parallel = TRUE,
+  ptype = c("auto", "fork", "psock"),
+  pcores = NULL,
   verbose = FALSE,
   ...
 )
@@ -49,7 +51,17 @@ within clusters? See Details and Examples below.#'}
 if neither `strata` or `cluster` are defined. See Details.}
 
 \item{parallel}{Logical. Should the permuted fits be executed in parallel?
-Passed to `parallel::mclapply` and thus ignored if Windows is detected.}
+Default is TRUE, with additional options being passed to the `ptype` and
+`pcores` arguments.}
+
+\item{ptype}{Character. What type of parallel strategy should be used? The
+default behaviour on Linux and Mac is parallel forking ("fork"), while on
+Windows it will revert to parallel sockets ("psock"). Note that forking
+is more efficient, but unavailable on Windows.}
+
+\item{pcores}{Integer. How many parallel cores should be used? If none is
+provided, then it will default to half of the total available CPU cores
+on the user's machine.}
 
 \item{verbose}{Logical. Display the underlying model `object` summary and
 `ritest` return value? Default is `FALSE`.}

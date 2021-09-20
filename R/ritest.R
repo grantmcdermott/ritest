@@ -26,7 +26,15 @@
 #' @param stack Logical. Should the permuted data be stacked in memory? Ignored
 #'   if neither `strata` or `cluster` are defined. See Details.
 #' @param parallel Logical. Should the permuted fits be executed in parallel?
-#'   Passed to `parallel::mclapply` and thus ignored if Windows is detected.
+#'   Default is TRUE, with additional options being passed to the `ptype` and
+#'   `pcores` arguments.
+#' @param ptype Character. What type of parallel strategy should be used? The
+#'   default behaviour on Linux and Mac is parallel forking ("fork"), while on
+#'   Windows it will revert to parallel sockets ("psock"). Note that forking
+#'   is more efficient, but unavailable on Windows.
+#' @param pcores Integer. How many parallel cores should be used? If none is
+#'   provided, then it will default to half of the total available CPU cores
+#'   on the user's machine.
 #' @param seed Integer. Random seed for reproducible results.
 #' @param verbose Logical. Display the underlying model `object` summary and
 #'   `ritest` return value? Default is `FALSE`.
@@ -72,6 +80,8 @@ ritest = function(resampvar,
                   seed = NULL,
                   stack = FALSE,
                   parallel = TRUE,
+                  ptype = c('auto', 'fork', 'psock'),
+                  pcores = NULL,
                   verbose = FALSE,
                   ...) {
 
@@ -81,16 +91,6 @@ ritest = function(resampvar,
     RNGkind("L'Ecuyer-CMRG")
     set.seed(seed)
     }
-
-  if (.Platform$OS.type == "windows") {
-    parallel = FALSE
-    # cl = parallel::makeCluster(cores)
-    # parallel::clusterEvalQ(cl, c(library(data.table)))
-    # parallel::clusterExport(cl, c("y", "f"), envir=environment())
-    # on.exit(parallel::stopCluster(cl))
-    # function(X, FUN, ...) parallel::parLapply(cl = cl,
-    #                                           X, FUN, ...)
-  }
 
   if (inherits(object, c('lm'))) {
     # Ymat = object$model[, 1, drop = FALSE]
@@ -199,20 +199,20 @@ ritest = function(resampvar,
     }
 
     DT_prep = function(DT) {
-      setkey(DT, .ii, strata)
+      data.table::setkey(DT, .ii, strata)
       if(is.null(cluster)) {
         DT_prepped = DT[DT[ , .I[sample(.N,.N)] , by = .(.ii, strata)]$V1,
                         .(treat_samp = treat),
                         keyby = .ii]
       } else {
-        DT2 = DT[rowid(.ii, strata, cluster)==1L]
-        DT2[, nn := rowid(.ii, strata)]
+        DT2 = DT[data.table::rowid(.ii, strata, cluster)==1L]
+        DT2[, nn := data.table::rowid(.ii, strata)]
         DT2[, treat_samp := treat[sample(nn)], by = .(.ii, strata)]
         DT_prepped = DT[DT2[, .(.ii, strata, cluster, treat_samp)],
                         on = .(.ii, strata, cluster)]
-        setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
+        data.table::setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
         DT_prepped = DT_prepped[, .(.ii, treat_samp)]#; gc()
-        setkey(DT_prepped, .ii)
+        data.table::setkey(DT_prepped, .ii)
       }
       DT_prepped = DT_prepped[,.(Xtreat_samp = list(as.matrix(treat_samp))), by=.ii]
       return(DT_prepped)
@@ -258,8 +258,51 @@ ritest = function(resampvar,
 
   ## Run the simulations
   if (parallel) {
-    betas = parallel::mclapply(1:reps, ri_sims, mc.cores = parallel::detectCores())
+
+    ptype = match.arg(ptype)
+    if (ptype=='auto') {
+      if (.Platform$OS.type == "windows") {
+        ptype = 'psock'
+        } else {
+          ptype = 'fork'
+        }
+    }
+
+    if (is.null(pcores)) {
+      pcores = ceiling(parallelly::availableCores()/2L)
+    } else if (!is.integer(pcores)) {
+      pcores = as.integer(pcores)
+    }
+    if (is.na(pcores) || pcores > parallelly::availableCores()) {
+      message("Invalid number of parallel cores selected. Reverting to default behaviour.")
+      pcores = ceiling(parallelly::availableCores()/2L)
+    }
+
+    if (ptype=='psock') {
+      if (!stack) {
+        ## Experimenting, I find a sharp decrease in psock performance with
+        ## pcores > 4 when the data aren't stacked and we require that sampling
+        ## remain constant within clusters. I'm not entirely sure why (probably
+        ## (something to do with the overhead), so we'll set this as the maximum
+        ## level to safeguard.
+        if (!is.null(cluster)) pcores = min(pcores, 4L)
+        setDTthreads(1L) ## avoid nested parallelism
+        }
+      cl = parallel::makeCluster(pcores)
+      parallel::clusterEvalQ(cl, c(library(data.table)))
+      parallel::clusterExport(
+        cl, c("DT", "split_list", "Xtreat", "stack", "Xmat", "Xmat_dm",
+              "Ymat", "Ymat_dm", "fmat", "onames"),
+        envir=environment()
+        )
+      betas = parallel::parLapply(cl = cl, 1:reps, ri_sims)
+      parallel::stopCluster(cl)
+      if (!stack) setDTthreads()
+    } else {
+      betas = parallel::mclapply(1:reps, ri_sims, mc.cores = pcores)
+    }
     betas = simplify2array(betas)
+
   } else {
     betas = sapply(1:reps, ri_sims)
   }
