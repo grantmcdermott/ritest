@@ -3,13 +3,17 @@ Type: Package
 Title: Random Inference Testing
 Version: 0.1.0
 Author@R: c(person(given = "Grant",
-            family = "McDermott",
-            role = c("aut", "cre"),
-            email = "grantmcd@uoregon.edu",
-            comment = c(ORCID = "0000-0001-7883-8573")))
+                   family = "McDermott",
+                   role = c("aut", "cre"),
+                   email = "grantmcd@uoregon.edu",
+                   comment = c(ORCID = "0000-0001-7883-8573")),
+            person(given = "Florian",
+                   family = "Hess",
+                   role = c("ctb"))
 Maintainer: <grantmcd@uoregon.edu>
 Description: An experimental port of the `ritest` Stata routine by Florian Hess.
-    Aims to support a variety of model classes once it is fully baked.
+    Fast and user-friendly. Aims to support a variety of model classes once it 
+    is fully baked.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
