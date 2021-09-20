@@ -20,8 +20,8 @@ LazyData: true
 URL: https://github.com/grantmcdermott/ritest
 BugReports: https://github.com/grantmcdermott/ritest/issues
 Imports: 
-    data.table
+    data.table,
+    fixest (>= 0.9.0)
 Suggests: 
-    tinytest,
-    fixest
+    tinytest
 RoxygenNote: 7.1.1

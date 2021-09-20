@@ -111,8 +111,8 @@ ritest = function(resampvar,
   fmat = NULL
   if (inherits(object, c('fixest', 'fixest_multi')) && !is.null(object$fixef_vars)) {
     fmat = model.matrix(object, type = 'fixef')
-    Xmat_dm = demean(Xmat, fmat)
-    Ymat_dm = demean(Ymat, fmat)
+    Xmat_dm = fixest::demean(Xmat, fmat)
+    Ymat_dm = fixest::demean(Ymat, fmat)
   }
 
   Xnames = colnames(Xmat)
@@ -247,7 +247,7 @@ ritest = function(resampvar,
       ## Then fit on the permuted data
       if (!is.null(fmat)) {
         ## We need to FE demean the sampled treatment vector
-        Xtreat_samp_dm = demean(Xtreat_samp, fmat, nthreads = 1)
+        Xtreat_samp_dm = fixest::demean(Xtreat_samp, fmat, nthreads = 1)
         beta_samp = coefficients(.lm.fit(cbind(Xtreat_samp_dm, Xmat_dm[, onames]), Ymat_dm))[1]
       } else {
         beta_samp = coefficients(.lm.fit(cbind(Xtreat_samp, Xmat[, onames]), Ymat))[1]
