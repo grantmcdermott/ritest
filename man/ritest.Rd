@@ -30,9 +30,9 @@ only `stats::lm` and `fixest::feols` models are supported.}
 that you want to conduct RI on. At present, only a single variable is
 permitted.}
 
-\item{reps}{Integer. The number of repetitions (permutations) in the RI
-simulation. Default is 100, but you probably want more that that. (Alwyn
-Young has suggested at least 2000 in a research setting.)}
+\item{reps}{Integer. The number of repetitions (permutation draws) in the RI
+simulation. Default is 100, but you probably want more that that. Young
+(2019) finds that rejection rates stabilise at around 2,000 draws.}
 
 \item{pvals}{Character. How should the test values should be computed? The
 default is "both", which means that two-sided p-values will be computed.
@@ -114,9 +114,13 @@ plot(mod_ri)
 plot(mod_ri, highlight_par = TRUE) ## Add the parametric CI lines
 }
 \references{
-Simon Heß (2017)
-\cite{Robust Randomization inference with Stata: A guide and software}, The
-Stata Journal, 17, Number 3, pp. 630--651
+Simon Heß (2017). \cite{Robust Randomization inference with
+  Stata: A guide and software}, The Stata Journal, 17, Number 3, pp. 630--651
+
+Alwyn Young (2019). \cite{Channeling Fisher: Randomization
+  Tests and the Statistical Insignificance of Seemingly Significant
+  Experimental Results}, The Quarterly Journal of Economics, 134, Issue 2,
+  pp. 557--598
 }
 \seealso{
 [print.ritest()], [plot.ritest()]

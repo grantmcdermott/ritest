@@ -12,9 +12,9 @@
 #' @param resampvar Character or one-sided formula. The variable (coefficient)
 #'   that you want to conduct RI on. At present, only a single variable is
 #'   permitted.
-#' @param reps Integer. The number of repetitions (permutations) in the RI
-#'   simulation. Default is 100, but you probably want more that that. (Alwyn
-#'   Young has suggested at least 2000 in a research setting.)
+#' @param reps Integer. The number of repetitions (permutation draws) in the RI
+#'   simulation. Default is 100, but you probably want more that that. Young
+#'   (2019) finds that rejection rates stabilise at around 2,000 draws.
 #' @param strata Character or one-sided formula. Permute `resampvar` within
 #'   strata? See Details and Examples below.
 #' @param cluster Character or one-sided formula. Keep `resampvar` constant
@@ -56,9 +56,12 @@
 #'   supported; only one permutation (RI) test is allowed; and only one strata
 #'   and/or cluster variable, respectively, can be supplied. I hope to resolve
 #'   these limitations as time permits.
-#' @references Simon Heß (2017)
-#' \cite{Robust Randomization inference with Stata: A guide and software}, The
-#' Stata Journal, 17, Number 3, pp. 630--651
+#' @references Simon Heß (2017). \cite{Robust Randomization inference with
+#'   Stata: A guide and software}, The Stata Journal, 17, Number 3, pp. 630--651
+#' @references Alwyn Young (2019). \cite{Channeling Fisher: Randomization
+#'   Tests and the Statistical Insignificance of Seemingly Significant
+#'   Experimental Results}, The Quarterly Journal of Economics, 134, Issue 2,
+#'   pp. 557--598
 #' @return An list object of class `ritest`. Default print and plotting methods
 #'   are supported.
 #' @seealso [print.ritest()], [plot.ritest()]
