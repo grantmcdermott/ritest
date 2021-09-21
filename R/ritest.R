@@ -99,12 +99,14 @@ ritest = function(object,
   if(!is.null(seed)) {
     RNGkind("L'Ecuyer-CMRG")
     set.seed(seed)
-    }
+  }
+
+  fixest_obj = inherits(object, c('fixest', 'fixest_multi'))
 
   if (inherits(object, c('lm'))) {
     # Ymat = object$model[, 1, drop = FALSE]
     Ymat = object$model[, 1]
-  } else if (inherits(object, c('fixest', 'fixest_multi'))) {
+  } else if (fixest_obj) {
     Ymat = model.matrix(object, type = 'lhs', as.matrix = TRUE)
   } else {
     stop('\nModel or object class not currently supported. See help documentation.\n')
@@ -118,7 +120,7 @@ ritest = function(object,
   Xmat = model.matrix(object)
 
   fmat = NULL
-  if (inherits(object, c('fixest', 'fixest_multi')) && !is.null(object$fixef_vars)) {
+  if (fixest_obj && !is.null(object$fixef_vars)) {
     fmat = model.matrix(object, type = 'fixef')
     Xmat_dm = fixest::demean(Xmat, fmat)
     Ymat_dm = fixest::demean(Ymat, fmat)
@@ -333,8 +335,14 @@ ritest = function(object,
   }
 
   ## Parametric values
-  beta_par = coeftable(object)[resampvar, 'Estimate']
-  pval_par = coeftable(object)[resampvar, 'Pr(>|t|)']
+  if (fixest_obj) {
+    coeftab = fixest::coeftable(object)
+  } else {
+    coeftab = summary(object)$coefficients
+  }
+  beta_par = coeftab[resampvar, 'Estimate']
+  pval_par = coeftab[resampvar, 'Pr(>|t|)']
+
 
   if (pvals=='both') {
     probs = abs(betas) >= abs(beta_par)
