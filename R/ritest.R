@@ -128,6 +128,7 @@ ritest = function(object,
 
   Xnames = colnames(Xmat)
   resampvar_pos = match(resampvar, Xnames)
+  resampvar_orig = NULL
   if (is.na(resampvar_pos)) {
     resampvar_orig = resampvar
     resampvar = paste0(resampvar, 1) ## Catch for single-level numeric factors.
@@ -173,7 +174,8 @@ ritest = function(object,
         assign('DATA', DATA)
       }
       if (x_string %in% names(DATA)) {
-        all_vars = do.call('c', sapply(list(Ymat, Xmat, fmat), colnames))
+        all_vars = sapply(list(Ymat, Xmat, fmat), colnames)
+        if (inherits(all_vars, 'list')) do.call('c', all_vars)
         all_vars = union(union(all_vars, resampvar_orig), x_string)
         DATA = data.frame(DATA)[, intersect(colnames(DATA), all_vars)]
         DATA = DATA[complete.cases(DATA), ]
