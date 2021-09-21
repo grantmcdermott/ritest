@@ -7,11 +7,11 @@ Author@R: c(person(given = "Grant",
                    role = c("aut", "cre"),
                    email = "grantmcd@uoregon.edu",
                    comment = c(ORCID = "0000-0001-7883-8573")),
-            person(given = "Florian",
-                   family = "Hess",
+            person(given = "Simon",
+                   family = "Heß",
                    role = c("ctb"))
 Maintainer: <grantmcd@uoregon.edu>
-Description: An experimental port of the `ritest` Stata routine by Florian Hess.
+Description: An experimental port of the `ritest` Stata routine by Simon Heß.
     Fast and user-friendly. Aims to support a variety of model classes once it 
     is fully baked.
 License: What license is it under?
