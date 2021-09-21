@@ -12,11 +12,12 @@ ritest(
   strata = NULL,
   cluster = NULL,
   level = 0.95,
-  seed = NULL,
-  stack = FALSE,
   parallel = TRUE,
   ptype = c("auto", "fork", "psock"),
   pcores = NULL,
+  stack = NULL,
+  stack_lim = 1L,
+  seed = NULL,
   verbose = FALSE,
   ...
 )
@@ -45,11 +46,6 @@ within clusters? See Details and Examples below.#'}
 
 \item{level}{Numeric. The desired confidence level. Default if 0.95.}
 
-\item{seed}{Integer. Random seed for reproducible results.}
-
-\item{stack}{Logical. Should the permuted data be stacked in memory? Ignored
-if neither `strata` or `cluster` are defined. See Details.}
-
 \item{parallel}{Logical. Should the permuted fits be executed in parallel?
 Default is TRUE, with additional options being passed to the `ptype` and
 `pcores` arguments.}
@@ -62,6 +58,20 @@ is more efficient, but unavailable on Windows.}
 \item{pcores}{Integer. How many parallel cores should be used? If none is
 provided, then it will default to half of the total available CPU cores
 on the user's machine.}
+
+\item{stack}{Logical. Should the permuted data be stacked in memory all at
+once, rather than being recalculated during each iteration? Stacking takes
+advantage of vectorisation and is thus more efficient. But it does
+require additional memory. If no explicit choice is provided, then the
+function will automatically stack as long this implies an additional memory
+overhead less than the `stack_lim` argument. (Note that stacking is only
+relevant if at least one of `strata` or `cluster` are defined.)}
+
+\item{stack_lim}{Numeric. What is the memory limit (in gigabytes) for
+determining whether the permuted data should be stacked in memory ahead of
+time? Default is 1 GB.}
+
+\item{seed}{Integer. Random seed for reproducible results.}
 
 \item{verbose}{Logical. Display the underlying model `object` summary and
 `ritest` return value? Default is `FALSE`.}
