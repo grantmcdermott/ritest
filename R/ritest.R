@@ -9,8 +9,9 @@
 #'
 #' @param object Model object containing the `resampvar` variable. At present,
 #'   only `stats::lm` and `fixest::feols` models are supported.
-#' @param resampvar Character. The name of the variable (coefficient) that you want
-#'   to test. At present, only a single variable is permitted.
+#' @param resampvar Character or one-sided formula. The variable (coefficient)
+#'   that you want to conduct RI on. At present, only a single variable is
+#'   permitted.
 #' @param reps Integer. The number of repetitions (permutations) in the RI
 #'   simulation. Default is 100, but you probably want more that that. (Alwyn
 #'   Young has suggested at least 2000 in a research setting.)
@@ -96,6 +97,10 @@ ritest = function(object,
 
   pvals = match.arg(pvals)
 
+  if (inherits(resampvar, "formula")) {
+    resampvar = strsplit(paste0(resampvar)[2], split = ' \\+ ')[[1]]
+  }
+
   if(!is.null(seed)) {
     RNGkind("L'Ecuyer-CMRG")
     set.seed(seed)
@@ -175,7 +180,7 @@ ritest = function(object,
       }
       if (x_string %in% names(DATA)) {
         all_vars = sapply(list(Ymat, Xmat, fmat), colnames)
-        if (inherits(all_vars, 'list')) do.call('c', all_vars)
+        if (inherits(all_vars, 'list')) all_vars = do.call('c', all_vars)
         all_vars = union(union(all_vars, resampvar_orig), x_string)
         DATA = data.frame(DATA)[, intersect(colnames(DATA), all_vars)]
         DATA = DATA[complete.cases(DATA), ]

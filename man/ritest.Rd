@@ -26,8 +26,9 @@ ritest(
 \item{object}{Model object containing the `resampvar` variable. At present,
 only `stats::lm` and `fixest::feols` models are supported.}
 
-\item{resampvar}{Character. The name of the variable (coefficient) that you want
-to test. At present, only a single variable is permitted.}
+\item{resampvar}{Character or one-sided formula. The variable (coefficient)
+that you want to conduct RI on. At present, only a single variable is
+permitted.}
 
 \item{reps}{Integer. The number of repetitions (permutations) in the RI
 simulation. Default is 100, but you probably want more that that. (Alwyn
