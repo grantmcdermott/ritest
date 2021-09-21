@@ -168,6 +168,7 @@ ritest = function(object,
       if (is.null(DATA)) {
         all_vars = do.call('c', sapply(list(Ymat, Xmat, fmat), colnames))
         all_vars = union(all_vars, x_string) ## probably redundant
+        all_vars = setdiff(all_vars, '(Intercept)')
         DATA = eval(object$call$data)
         DATA = data.frame(DATA)[, all_vars]
         DATA = DATA[complete.cases(DATA), ]
