@@ -5,8 +5,8 @@
 \title{Perform random inference on a model object}
 \usage{
 ritest(
-  resampvar,
   object,
+  resampvar,
   reps = 100,
   pvals = c("both", "left", "right"),
   strata = NULL,
@@ -23,11 +23,11 @@ ritest(
 )
 }
 \arguments{
-\item{resampvar}{Character. The name of the variable (coefficient) that you want
-to test. At present, only a single variable is permitted.}
-
 \item{object}{Model object containing the `resampvar` variable. At present,
 only `stats::lm` and `fixest::feols` models are supported.}
+
+\item{resampvar}{Character. The name of the variable (coefficient) that you want
+to test. At present, only a single variable is permitted.}
 
 \item{reps}{Integer. The number of repetitions (permutations) in the RI
 simulation. Default is 100, but you probably want more that that. (Alwyn
@@ -105,7 +105,7 @@ mod = feols(yield ~ N + P + K | block, data = npk)
 # Conduct RI on the 'N' (nitrogen) coefficient. We'll do 1,000 simulations
 # and permute within the 'block' variable strata. The 'verbose = TRUE'
 # argument simply prints the results upon completion.
-mod_ri = ritest('N', mod, reps = 1e3, strata = ~block, verbose = TRUE)
+mod_ri = ritest(mod, 'N', reps = 1e3, strata = ~block, verbose = TRUE)
 
 # We can also plot the results and various options are available to
 # customise the appearance.

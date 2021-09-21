@@ -7,10 +7,10 @@
 #'   quite experimental and only a subset of this functionality is currently
 #'   supported. However, it does appear to be significantly faster.
 #'
-#' @param resampvar Character. The name of the variable (coefficient) that you want
-#'   to test. At present, only a single variable is permitted.
 #' @param object Model object containing the `resampvar` variable. At present,
 #'   only `stats::lm` and `fixest::feols` models are supported.
+#' @param resampvar Character. The name of the variable (coefficient) that you want
+#'   to test. At present, only a single variable is permitted.
 #' @param reps Integer. The number of repetitions (permutations) in the RI
 #'   simulation. Default is 100, but you probably want more that that. (Alwyn
 #'   Young has suggested at least 2000 in a research setting.)
@@ -70,14 +70,14 @@
 #' # Conduct RI on the 'N' (nitrogen) coefficient. We'll do 1,000 simulations
 #' # and permute within the 'block' variable strata. The 'verbose = TRUE'
 #' # argument simply prints the results upon completion.
-#' mod_ri = ritest('N', mod, reps = 1e3, strata = ~block, verbose = TRUE)
+#' mod_ri = ritest(mod, 'N', reps = 1e3, strata = ~block, verbose = TRUE)
 #'
 #' # We can also plot the results and various options are available to
 #' # customise the appearance.
 #' plot(mod_ri)
 #' plot(mod_ri, highlight_par = TRUE) ## Add the parametric CI lines
-ritest = function(resampvar,
-                  object,
+ritest = function(object,
+                  resampvar,
                   reps = 100,
                   pvals = c("both", "left", "right"),
                   strata = NULL,
