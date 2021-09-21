@@ -168,16 +168,15 @@ ritest = function(object,
       ret = Xmat[, x_string]
     } else {
       if (is.null(DATA)) {
-        all_vars = do.call('c', sapply(list(Ymat, Xmat, fmat), colnames))
-        all_vars = union(all_vars, x_string) ## probably redundant
-        all_vars = setdiff(all_vars, '(Intercept)')
         DATA = eval(object$call$data)
-        DATA = data.frame(DATA)[, all_vars]
-        DATA = DATA[complete.cases(DATA), ]
         ## Assign to parent env to avoid redoing if possible
         assign('DATA', DATA)
       }
       if (x_string %in% names(DATA)) {
+        all_vars = do.call('c', sapply(list(Ymat, Xmat, fmat), colnames))
+        all_vars = union(union(all_vars, resampvar_orig), x_string)
+        DATA = data.frame(DATA)[, intersect(colnames(DATA), all_vars)]
+        DATA = DATA[complete.cases(DATA), ]
         ret = model.matrix(~0+., DATA[, x_string, drop=FALSE])
       } else {
         stop(paste0('Could not find ', x, '. Please provide a valid input.\n'))
@@ -190,10 +189,12 @@ ritest = function(object,
   if (!is.null(strata)) {
     strata_split = prep_split_var(strata)
     strata = attr(strata_split, 'string')
+    attr(strata, 'levels') = length(unique(strata_split))
     }
   if (!is.null(cluster)) {
     cluster_split = prep_split_var(cluster)
     cluster = attr(cluster_split, 'string')
+    attr(cluster, 'levels') = length(unique(cluster_split))
     }
 
   ## Next line mostly for indexing
@@ -429,7 +430,9 @@ print.ritest = function(x, verbose = FALSE, ...) {
   cat("\nCall: ", x$call, "\n", sep = "")
   cat("Res. var(s): ", x$resampvar, "\n", sep = "")
   cat("Strata var(s): ", x$strata, "\n", sep = "")
+  cat("Strata: ", attr(x$strata, 'levels'), "\n", sep = "")
   cat("Cluster var(s): ", x$cluster, "\n", sep = "")
+  cat("Clusters: ", attr(x$cluster, 'levels'), "\n", sep = "")
   cat("Num. reps: ", x$reps, "\n", sep = "")
   cat("---", "\n")
   print(ri_mat, quote = FALSE, print.gap = 2L)
