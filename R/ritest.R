@@ -23,8 +23,16 @@
 #'   Alternatively, users can specify one-sided p-values with either "left" or
 #'   "right".
 #' @param level Numeric. The desired confidence level. Default if 0.95.
-#' @param stack Logical. Should the permuted data be stacked in memory? Ignored
-#'   if neither `strata` or `cluster` are defined. See Details.
+#' @param stack Logical. Should the permuted data be stacked in memory all at
+#'   once, rather than being recalculated during each iteration? Stacking takes
+#'   advantage of vectorisation and is thus more efficient. But it does
+#'   require additional memory. If no explicit choice is provided, then the
+#'   function will automatically stack as long this implies an additional memory
+#'   overhead less than the `stack_lim` argument. (Note that stacking is only
+#'   relevant if at least one of `strata` or `cluster` are defined.)
+#' @param stack_lim Numeric. What is the memory limit (in gigabytes) for
+#'   determining whether the permuted data should be stacked in memory ahead of
+#'   time? Default is 1 GB.
 #' @param parallel Logical. Should the permuted fits be executed in parallel?
 #'   Default is TRUE, with additional options being passed to the `ptype` and
 #'   `pcores` arguments.
@@ -77,11 +85,12 @@ ritest = function(resampvar,
                   # fixlevels = NULL,
                   # h0 = NULL,
                   level = 0.95,
-                  seed = NULL,
-                  stack = FALSE,
                   parallel = TRUE,
                   ptype = c('auto', 'fork', 'psock'),
                   pcores = NULL,
+                  stack = NULL,
+                  stack_lim = 1L,
+                  seed = NULL,
                   verbose = FALSE,
                   ...) {
 
@@ -218,8 +227,18 @@ ritest = function(resampvar,
       return(DT_prepped)
     }
 
+    if (is.null(stack) || stack) {
+      sdict = c('integer' = 4, 'numeric' = 8)
+      ## Need to add an extra 4 byte (integer) variable for .ii index column
+      stacked_DT_size = mean(c(sdict[sapply(DT, class)], 4))*NROW(DT)*NCOL(DT) * reps / 1e9
+      stack = stacked_DT_size < stack_lim
+    }
+
     ## stacked?
     if (stack) {
+      if (verbose) cat('\nPermuted data of approximate size',
+                       sprintf("%.2g", stacked_DT_size),
+                       'GB being stacked in memory.')
       DT = rbindlist(lapply(1:reps, function(ii) {DT; DT$.ii = ii; DT}))
       DT = DT_prep(DT)
     }
@@ -295,15 +314,20 @@ ritest = function(resampvar,
               "Ymat", "Ymat_dm", "fmat", "onames"),
         envir=environment()
         )
+      if (verbose) cat("\nRunning", reps, "parallel RI simulations in a PSOCK",
+                       "cluster across", pcores, "CPU cores.")
       betas = parallel::parLapply(cl = cl, 1:reps, ri_sims)
       parallel::stopCluster(cl)
       if (!stack) setDTthreads()
     } else {
+      if (verbose) cat("\nRunning", reps, "parallel RI simulations as forked",
+                       "processes across", pcores, "CPU cores.")
       betas = parallel::mclapply(1:reps, ri_sims, mc.cores = pcores)
     }
     betas = simplify2array(betas)
 
   } else {
+    if (verbose) cat("\nRunning", reps, "RI simulations sequentially.")
     betas = sapply(1:reps, ri_sims)
   }
 
@@ -380,7 +404,8 @@ print.ritest = function(x, verbose = FALSE, ...) {
   }
 
   if (verbose) {
-    cat("******************",
+    cat("\n",
+        "******************",
         "* ORIGINAL MODEL *",
         "******************",
         sep = "\n")
