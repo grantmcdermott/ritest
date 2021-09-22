@@ -14,7 +14,7 @@ Maintainer: <grantmcd@uoregon.edu>
 Description: An experimental port of the `ritest` Stata routine by Simon Heß.
     Fast and user-friendly. Aims to support a variety of model classes once it 
     is fully baked.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/grantmcdermott/ritest
