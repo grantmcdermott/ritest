@@ -412,7 +412,7 @@ ritest = function(object,
 #' @description Printed display of ritest objects. Tries to mimic the display
 #'   of the equivalent Stata routine.
 #' @param x An ritest object.
-#' @param verbose Logical. Should we display the the original model summary too?
+#' @param verbose Logical. Should we display the original model summary too?
 #'   Default is FALSE.
 #' @param ... Currently ignored.
 #' @export

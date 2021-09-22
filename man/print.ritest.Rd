@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{An ritest object.}
 
-\item{verbose}{Logical. Should we display the the original model summary too?
+\item{verbose}{Logical. Should we display the original model summary too?
 Default is FALSE.}
 
 \item{...}{Currently ignored.}
