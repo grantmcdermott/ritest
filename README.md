@@ -4,6 +4,8 @@
 # ritest
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
 <!-- badges: end -->
 
 The goal of ritest is to …
