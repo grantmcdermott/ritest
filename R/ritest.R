@@ -66,6 +66,11 @@
 #'   are supported.
 #' @seealso [print.ritest()], [plot.ritest()]
 #' @import data.table
+#' @importFrom grDevices rgb
+#' @importFrom graphics abline hist title
+#' @importFrom stats .lm.fit coefficients complete.cases confint density
+#'   model.matrix qnorm sd
+#' @importFrom utils capture.output head tail
 #' @export
 #' @examples
 #' library(fixest)
@@ -98,6 +103,10 @@ ritest = function(object,
                   verbose = FALSE,
                   ...) {
 
+  ## Silence NSE notes in R CMD check. See:
+  ## https://cran.r-project.org/web/packages/data.table/vignettes/datatable-importing.html#globals
+  orig_order = .ii = treat = nn = treat_samp = NULL
+
   pvals = match.arg(pvals)
 
   if (inherits(resampvar, "formula")) {
@@ -129,7 +138,7 @@ ritest = function(object,
 
   fmat = NULL
   if (fixest_obj && !is.null(object$fixef_vars)) {
-    fmat = model.matrix(object, type = 'fixef')
+    fmat = fixest::model.matrix(object, type = 'fixef')
     Xmat_dm = fixest::demean(Xmat, fmat)
     Ymat_dm = fixest::demean(Ymat, fmat)
   }
