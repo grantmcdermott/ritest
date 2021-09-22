@@ -2,14 +2,16 @@ Package: ritest
 Type: Package
 Title: Random Inference Testing
 Version: 0.1.0
-Author@R: c(person(given = "Grant",
-                   family = "McDermott",
-                   role = c("aut", "cre"),
-                   email = "grantmcd@uoregon.edu",
-                   comment = c(ORCID = "0000-0001-7883-8573")),
-            person(given = "Simon",
-                   family = "Heß",
-                   role = c("ctb")))
+Authors@R: c(
+    person(given = "Grant",
+           family = "McDermott",
+           role = c("aut", "cre"),
+           email = "grantmcd@uoregon.edu",
+           comment = c(ORCID = "0000-0001-7883-8573")),
+    person(given = "Simon",
+           family = "Heß",
+           role = "ctb")
+           )
 Maintainer: <grantmcd@uoregon.edu>
 Description: An experimental port of the `ritest` Stata routine by Simon Heß.
     Fast and user-friendly. Aims to support a variety of model classes once it 
