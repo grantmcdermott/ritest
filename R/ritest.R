@@ -138,7 +138,7 @@ ritest = function(object,
 
   fmat = NULL
   if (fixest_obj && !is.null(object$fixef_vars)) {
-    fmat = fixest::model.matrix(object, type = 'fixef')
+    fmat = model.matrix(object, type = 'fixef')
     Xmat_dm = fixest::demean(Xmat, fmat)
     Ymat_dm = fixest::demean(Ymat, fmat)
   }
@@ -233,20 +233,20 @@ ritest = function(object,
     DT_prep = function(DT) {
       data.table::setkey(DT, .ii, strata)
       if(is.null(cluster)) {
-        DT_prepped = DT[DT[ , .I[sample(.N,.N)] , by = .(.ii, strata)]$V1,
-                        .(treat_samp = treat),
+        DT_prepped = DT[DT[ , .I[sample(.N,.N)] , by = list(.ii, strata)]$V1,
+                        list(treat_samp = treat),
                         keyby = .ii]
       } else {
         DT2 = DT[data.table::rowid(.ii, strata, cluster)==1L]
         DT2[, nn := data.table::rowid(.ii, strata)]
-        DT2[, treat_samp := treat[sample(nn)], by = .(.ii, strata)]
-        DT_prepped = DT[DT2[, .(.ii, strata, cluster, treat_samp)],
-                        on = .(.ii, strata, cluster)]
+        DT2[, treat_samp := treat[sample(nn)], by = list(.ii, strata)]
+        DT_prepped = DT[DT2[, list(.ii, strata, cluster, treat_samp)],
+                        on = list(.ii, strata, cluster)]
         data.table::setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
-        DT_prepped = DT_prepped[, .(.ii, treat_samp)]#; gc()
+        DT_prepped = DT_prepped[, list(.ii, treat_samp)]#; gc()
         data.table::setkey(DT_prepped, .ii)
       }
-      DT_prepped = DT_prepped[,.(Xtreat_samp = list(as.matrix(treat_samp))), by=.ii]
+      DT_prepped = DT_prepped[,list(Xtreat_samp = list(as.matrix(treat_samp))), by=.ii]
       return(DT_prepped)
     }
 
