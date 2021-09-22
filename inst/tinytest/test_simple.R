@@ -10,14 +10,14 @@ table_2_2 = data.frame(Z = c(1, 0, 0, 0, 0, 0, 1),
 
 est = lm(Y ~ Z, table_2_2)
 
-ritest_est = ritest(est, 'Z', reps = 1e3, seed = 42L)
-ritest_est_fml = ritest(est, ~Z, reps = 1e3, seed = 42L)
+ritest_est = ritest(est, 'Z', reps = 1e3, seed = 42L, pcores = 2L)
+ritest_est_fml = ritest(est, ~Z, reps = 1e3, seed = 42L, pcores = 2L)
 
 # Test that character and formula results are the same
 expect_equal(ritest_est, ritest_est_fml)
 
 # Test p-value
-expect_equal(as.numeric(ritest_est$pval), 0.378, tolerance = 1e-03)
+expect_equal(as.numeric(ritest_est$pval), 0.373, tolerance = 1e-03)
 
 # Test CI
-expect_equal(as.numeric(ritest_est$ci), c(0.3364, 0.4195), tolerance = 1e-03)
+expect_equal(as.numeric(ritest_est$ci), c(0.3316, 0.4144), tolerance = 1e-04)
