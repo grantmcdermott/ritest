@@ -28,8 +28,9 @@ Imports:
     grDevices, 
     graphics, 
     parallel,
-    parallelly,
-    fixest (>= 0.9.0)
+    parallelly
+Remotes:
+    lrberge/fixest
 Suggests: 
     tinytest
 RoxygenNote: 7.1.1
