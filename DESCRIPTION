@@ -24,14 +24,15 @@ BugReports: https://github.com/grantmcdermott/ritest/issues
 Imports:
     utils,
     stats,
-    data.table,
     grDevices, 
     graphics, 
     parallel,
     parallelly,
+    data.table,
     fixest (>= 0.10.0)
 Remotes:
     lrberge/fixest
 Suggests: 
-    tinytest
+    tinytest,
+    ggplot2
 RoxygenNote: 7.1.1

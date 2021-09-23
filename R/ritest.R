@@ -16,7 +16,7 @@
 #'   simulation. Default is 100, but you probably want more that that. Young
 #'   (2019) finds that rejection rates stabilise at around 2,000 draws.
 #' @param strata Character or one-sided formula. Permute `resampvar` within
-#'   strata? See Details and Examples below.
+#'   strata (AKA blocks)? See Details and Examples below.
 #' @param cluster Character or one-sided formula. Keep `resampvar` constant
 #'   within clusters? See Details and Examples below.#'
 #' @param pvals Character. How should the test values should be computed? The
@@ -26,7 +26,9 @@
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param stack Logical. Should the permuted data be stacked in memory all at
 #'   once, rather than being recalculated during each iteration? Stacking takes
-#'   advantage of vectorisation and is thus more efficient. But it does
+#'   advantage of vectorisation and is thus more efficient. (It also helps to
+#'   ensure reproducibility when the results are being generated in parallel ---
+#'   see the note on random-number generation below.) But it does
 #'   require additional memory. If no explicit choice is provided, then the
 #'   function will automatically stack as long this implies an additional memory
 #'   overhead less than the `stack_lim` argument. (Note that stacking is only
@@ -44,7 +46,9 @@
 #' @param pcores Integer. How many parallel cores should be used? If none is
 #'   provided, then it will default to half of the total available CPU cores
 #'   on the user's machine.
-#' @param seed Integer. Random seed for reproducible results.
+#' @param seed Integer. Random seed for reproducible results. Note that the
+#'   choice of parallel behaviour can alter results even when using the same
+#'   seed. See the note on random number generation below.
 #' @param verbose Logical. Display the underlying model `object` summary and
 #'   `ritest` return value? Default is `FALSE`.
 #' @param ... Additional arguments. Currently ignored.
@@ -56,6 +60,45 @@
 #'   supported; only one permutation (RI) test is allowed; and only one strata
 #'   and/or cluster variable, respectively, can be supplied. I hope to resolve
 #'   these limitations as time permits.
+#'
+#' @note The use of parallelism in computation introduces some well-known
+#'   complications with respect to random number generation (RNG). See the
+#'   vignette accompanying the `parallel` package for more discussion. The
+#'   `ritest()` function adopts various best practices to facilitate reliably
+#'   reproducible results, irrespective of the choice of parallel strategy.
+#'   These include the use of "L'Ecuyer-CMRG" RNG kind and the default behaviour
+#'   of "stacking" the permuted results in memory before passing them on to the
+#'   fitting stage of the random inference routine (where the fitting would
+#'   still be done in parallel). To briefly dwell on the latter, note that this
+#'   stacking behaviour is very similar to --- I nearly wrote "parallels" ---
+#'   the approach adopted by `boot` and other packages that trade off RNG with
+#'   parallelism and reproducibility. In the phrasing
+#'   of the `parallel` vignette: "One way to avoid any difficulties is (where
+#'   possible) to do all the randomization in the master process" (p. 5).
+#'
+#'   The upshot is that running `ritest()` under a given set of arguments should
+#'   generally yield the same, reproducible results regardless of when or where
+#'   they were run. This should be true even if users turn the default parallel
+#'   behaviour of the function off or back on, or whether they change the
+#'   `ptype` argument to "psock" or "fork" and back again. However, it cannot be
+#'   guaranteed under every scenario. Perhaps the most obvious case is when
+#'   `ritest()` is run without any declared strata or clusters. (Reason:
+#'   Stacking in this simple case is turned off because it yields no efficiency
+#'   gains.) In this case, the RNG stream will be sensitive to the _number_ of
+#'   available cores on a user's computer. Two parallel cores will yield a
+#'   slightly different result than four cores, or six cores, etc. Of course,
+#'   users can always ensure perfect reproducibility by explicitly defining the
+#'   number of required cores in the `ritest()` call via the `pcores` argument.
+#'   Stepping back, the focus on reproducible exactitude rather misses the
+#'   point in an exercise like random inference testing. Much more important is
+#'   running enough permutation trials so that your rejection rates are stable
+#'   and any minor differences due to different RNG seeds are moot. Remember,
+#'   the ultimate goal of inference (and research) isn't simply to generate
+#'   reproducible results under a very specific set of circumstances. Rather, it
+#'   is to generate consistent insights that hold even under varying
+#'   circumstances.
+#'
+#'
 #' @references Simon Heß (2017). \cite{Robust Randomization inference with
 #'   Stata: A guide and software}, The Stata Journal, 17, Number 3, pp. 630--651
 #' @references Alwyn Young (2019). \cite{Channeling Fisher: Randomization
@@ -73,18 +116,57 @@
 #' @importFrom utils capture.output head tail
 #' @export
 #' @examples
-#' library(fixest)
-#' mod = feols(yield ~ N + P + K | block, data = npk)
+#' # Naive example using the inbuilt nkp dataset. See ?npk.
 #'
-#' # Conduct RI on the 'N' (nitrogen) coefficient. We'll do 1,000 simulations
-#' # and permute within the 'block' variable strata. The 'verbose = TRUE'
-#' # argument simply prints the results upon completion.
-#' mod_ri = ritest(mod, 'N', reps = 1e3, strata = ~block, verbose = TRUE)
+#' est = lm(yield ~ N + P + K, data = npk)
+#'
+#' # Conduct RI on the 'N' (i.e. nitrogen) coefficient. We'll do 1,000 simulations
+#' # and, just for illustration, limit the number of parallel cores to 2.
+#' # The 'verbose = TRUE' argument simply prints the results upon completion,
+#' # including the original regression model summary.
+#'
+#' est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
+#'
+#' # The RI rejection rate (0.021) is very similar to the parametric p-value (0.019).
 #'
 #' # We can also plot the results and various options are available to
 #' # customise the appearance.
-#' plot(mod_ri)
-#' plot(mod_ri, highlight_par = TRUE) ## Add the parametric CI lines
+#'
+#' plot(est_ri)
+#' plot(est_ri, type = 'hist')
+#' # etc
+#'
+#' # More realistic example where we control for the stratified (aka "blocked")
+#' # experimental design. We'll specify these strata (blocks) as fixed-effects
+#' # in our regression model.
+#'
+#' library(fixest) ## Aside: ritest requires fixest version >= 0.10.0
+#' est2 = feols(yield ~ N + P + K | block, vcov = 'iid', data = npk)
+#'
+#' # Re-do our RI from before, but this time permute within the 'block' strata.
+#'
+#' est2_ri = ritest(est2, 'N', reps = 1e3, strata = 'block', seed = 99L, verbose = TRUE)
+#'
+#' # Again, the RI rejection rate (0.003) is very similar to the parametric
+#' # p-value (0.004) from the regression model. You probably want to increase
+#' # the number of permutation reps for a real problem, though.
+#'
+#' # Some asides...
+#'
+#' # Formula interfaces are supported if you don't like writing variables as
+#' # strings. You can also pipe everything, e.g. using the native pipe if you
+#' # are on R >=4.1.1. For example:
+#'
+#' feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
+#'   ritest(~N, reps = 1e3, strata = ~block, seed = 99L) |>
+#'   plot()
+#'
+#' # If you don't like the default plot method and would prefer to use ggplot2,
+#' # then that's easily done. Just extract the beta values from the return object.
+#'
+#' library(ggplot2)
+#' ggplot(data.frame(betas = est2_ri$betas), aes(betas)) + geom_density()
+#'
 ritest = function(object,
                   resampvar,
                   reps = 100,
@@ -360,16 +442,16 @@ ritest = function(object,
   } else {
     coeftab = summary(object)$coefficients
   }
-  beta_par = coeftab[resampvar, 'Estimate']
-  pval_par = coeftab[resampvar, 'Pr(>|t|)']
+  beta_parm = coeftab[resampvar, 'Estimate']
+  pval_parm = coeftab[resampvar, 'Pr(>|t|)']
 
 
   if (pvals=='both') {
-    probs = abs(betas) >= abs(beta_par)
+    probs = abs(betas) >= abs(beta_parm)
   } else if (pvals=='left') {
-    probs = betas <= beta_par
+    probs = betas <= beta_parm
   } else {
-    probs = betas >= beta_par
+    probs = betas >= beta_parm
   }
   count = sum(probs)
   pval = count/reps
@@ -381,8 +463,8 @@ ritest = function(object,
   ci = pval + c(-ci, ci)
   alpha = 1-level
   names(ci) = paste0('CI ', c(alpha/2, 1-alpha/2)*100, '%')
-  ci_par = confint(object)
-  ci_par = ci_par[rownames(ci_par)==resampvar,]
+  ci_parm = confint(object)
+  ci_parm = ci_parm[rownames(ci_parm)==resampvar,]
 
   out = list(call = call_string,
              resampvar = resampvar,
@@ -395,9 +477,9 @@ ritest = function(object,
              ci = ci,
              betas = betas,
              object_summ_string = object_summ_string,
-             pval_par = pval_par,
-             beta_par = beta_par,
-             ci_par = ci_par)
+             pval_parm = pval_parm,
+             beta_parm = beta_parm,
+             ci_parm = ci_parm)
 
   class(out) = "ritest"
 
@@ -415,10 +497,11 @@ ritest = function(object,
 #' @param verbose Logical. Should we display the original model summary too?
 #'   Default is FALSE.
 #' @param ... Currently ignored.
+#' @inherit ritest examples
 #' @export
 print.ritest = function(x, verbose = FALSE, ...) {
 
-  ri_mat = c(`T(obs)` = x$beta_par, `c` = x$count, `n` = x$reps,
+  ri_mat = c(`T(obs)` = x$beta_parm, `c` = x$count, `n` = x$reps,
              `p=c/n` = x$pval, `SE(p)` = x$se)
   ri_mat = c(ri_mat, x$ci)
   ri_mat_nms = names(ri_mat)
@@ -470,7 +553,7 @@ print.ritest = function(x, verbose = FALSE, ...) {
 #' @param type Character. What type of plot do you want?
 #' @param highlight Character. How do you want to highlight the H0 rejection
 #'   regions in the distribution tails?
-#' @param highlight_par Logical. Should we highlight the parametric H0 rejection
+#' @param show_parm Logical. Should we highlight the parametric H0 rejection
 #'   regions too?
 #' @param breaks Character. Histogram plot only. What type of breaks do you
 #'   want? The default method creates more breaks than the standard R behaviour.
@@ -478,10 +561,11 @@ print.ritest = function(x, verbose = FALSE, ...) {
 #' @param family Character. The font family. Defaults to 'HersheySans' instead
 #'   of R's normal Arial plotting font.
 #' @param ... Other plot arguments. Currently ignored.
+#' @inherit ritest examples
 #' @export
 plot.ritest = function(x, type = c('density', 'hist'),
                        highlight = c('lines', 'fill', 'both', 'none'),
-                       highlight_par = FALSE,  breaks = 'auto',
+                       show_parm = FALSE,  breaks = 'auto',
                        family = NULL, ...) {
   type = match.arg(type)
   highlight = match.arg(highlight)
@@ -490,12 +574,12 @@ plot.ritest = function(x, type = c('density', 'hist'),
     dens = density(x$betas)
     plot(dens,
          main = '', xlab = '',
-         xlim = range(x$betas, x$beta_par),
+         xlim = range(x$betas, x$beta_parm),
          family = family)
     if (highlight %in% c('both', 'fill')) {
       x1 = 1
-      x2 = tail(which(dens$x <= -abs(x$beta_par)), 1)
-      x3 = head(which(dens$x >= abs(x$beta_par)), 1)
+      x2 = tail(which(dens$x <= -abs(x$beta_parm)), 1)
+      x3 = head(which(dens$x >= abs(x$beta_parm)), 1)
       x4 = length(dens$x)
       fcol = rgb(1,0,0,0.5)
       with(dens, polygon(x=c(x[c(x1,x1:x2,x2)]), y= c(0, y[x1:x2], 0), col=fcol, border = FALSE))
@@ -511,7 +595,7 @@ plot.ritest = function(x, type = c('density', 'hist'),
 
     hist_df = hist(x$betas, breaks = breaks, plot = FALSE)
     if (highlight %in% c('both', 'fill')) {
-      hist_col = ifelse(abs(hist_df$breaks) > abs(x$beta_par), rgb(1,0,0,0.5), rgb(0.2,0.2,0.2,0.2))
+      hist_col = ifelse(abs(hist_df$breaks) > abs(x$beta_parm), rgb(1,0,0,0.5), rgb(0.2,0.2,0.2,0.2))
     } else {
       hist_col = rgb(0.2,0.2,0.2,0.2)
     }
@@ -519,21 +603,21 @@ plot.ritest = function(x, type = c('density', 'hist'),
          col = hist_col,
          border = FALSE,
          main = NULL, xlab = NULL,
-         xlim = range(x$betas, x$beta_par),
+         xlim = range(x$betas, x$beta_parm),
          family = family)
   }
   title(main = paste('Random Inference:', x$resampvar),
         sub = paste0('Simulated p-val: ',  sprintf('%.3g', x$pval),
-                     '. Parametric p-val: ', sprintf('%.3g', x$pval_par),'.'),
+                     '. Parametric p-val: ', sprintf('%.3g', x$pval_parm),'.'),
         cex.sub = 0.75,
         xlab = 'Simulated values',
         family = family)
   if (highlight %in% c('both', 'lines')) {
-    abline(v = x$beta_par, col = "red", lty = 1)
-    abline(v = -x$beta_par, col = "red", lty = 1)
+    abline(v = x$beta_parm, col = "red", lty = 1)
+    abline(v = -x$beta_parm, col = "red", lty = 1)
   }
-  if (highlight_par) {
-    abline(v = sweep(x$ci_par, 2, rowMeans(x$ci_par)), lty = 2, col = 'red')
+  if (show_parm) {
+    abline(v = sweep(x$ci_parm, 2, rowMeans(x$ci_parm)), lty = 2, col = 'red')
   }
 }
 

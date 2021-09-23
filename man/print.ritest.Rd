@@ -18,3 +18,56 @@ Default is FALSE.}
 Printed display of ritest objects. Tries to mimic the display
   of the equivalent Stata routine.
 }
+\examples{
+# Naive example using the inbuilt nkp dataset. See ?npk.
+
+est = lm(yield ~ N + P + K, data = npk)
+
+# Conduct RI on the 'N' (i.e. nitrogen) coefficient. We'll do 1,000 simulations
+# and, just for illustration, limit the number of parallel cores to 2.
+# The 'verbose = TRUE' argument simply prints the results upon completion,
+# including the original regression model summary.
+
+est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
+
+# The RI rejection rate (0.021) is very similar to the parametric p-value (0.019).
+
+# We can also plot the results and various options are available to
+# customise the appearance.
+
+plot(est_ri)
+plot(est_ri, type = 'hist')
+# etc
+
+# More realistic example where we control for the stratified (aka "blocked")
+# experimental design. We'll specify these strata (blocks) as fixed-effects
+# in our regression model.
+
+library(fixest) ## Aside: ritest requires fixest version >= 0.10.0
+est2 = feols(yield ~ N + P + K | block, vcov = 'iid', data = npk)
+
+# Re-do our RI from before, but this time permute within the 'block' strata.
+
+est2_ri = ritest(est2, 'N', reps = 1e3, strata = 'block', seed = 99L, verbose = TRUE)
+
+# Again, the RI rejection rate (0.003) is very similar to the parametric
+# p-value (0.004) from the regression model. You probably want to increase
+# the number of permutation reps for a real problem, though.
+
+# Some asides...
+
+# Formula interfaces are supported if you don't like writing variables as
+# strings. You can also pipe everything, e.g. using the native pipe if you
+# are on R >=4.1.1. For example:
+
+feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
+  ritest(~N, reps = 1e3, strata = ~block, seed = 99L) |>
+  plot()
+
+# If you don't like the default plot method and would prefer to use ggplot2,
+# then that's easily done. Just extract the beta values from the return object.
+
+library(ggplot2)
+ggplot(data.frame(betas = est2_ri$betas), aes(betas)) + geom_density()
+
+}
