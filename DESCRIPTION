@@ -28,7 +28,8 @@ Imports:
     grDevices, 
     graphics, 
     parallel,
-    parallelly
+    parallelly,
+    fixest (>= 0.10.0)
 Remotes:
     lrberge/fixest
 Suggests: 
