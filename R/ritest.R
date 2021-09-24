@@ -250,11 +250,7 @@ ritest = function(object,
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
   Xtreat = Xmat[,resampvar_pos]
 
-  DATA = NULL
-  strata_split = NULL
-  cluster_split = NULL
-  split_list = NULL
-  # Xtreat_split = NULL
+  DT = DATA = strata_split = cluster_split = split_list = NULL
 
   prep_split_var = function(x) {
     if (inherits(x, "formula")) {
