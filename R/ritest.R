@@ -333,7 +333,7 @@ ritest = function(object,
     }
 
     if (is.null(stack) || stack) {
-      sdict = c('integer' = 4, 'numeric' = 8)
+      sdict = c('logical' = 4, 'integer' = 4, 'numeric' = 8)
       ## Need to add an extra 4 byte (integer) variable for .ii index column
       stacked_DT_size = mean(c(sdict[sapply(DT, class)], 4))*NROW(DT)*NCOL(DT) * reps / 1e9
       stack = stacked_DT_size < stack_lim
