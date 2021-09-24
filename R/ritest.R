@@ -618,7 +618,11 @@ plot.ritest = function(x, type = c('density', 'hist'),
     abline(v = -x$beta_parm, col = "red", lty = 1)
   }
   if (show_parm) {
-    abline(v = sweep(x$ci_parm, 2, rowMeans(x$ci_parm)), lty = 2, col = 'red')
+    if (inherits(x$ci_parm, 'data.frame')) {
+      abline(v = sweep(x$ci_parm, 2, rowMeans(x$ci_parm)), lty = 2, col = 'red')
+    } else {
+      abline(v = x$ci_parm - mean(x$ci_parm), lty = 2, col = 'red')
+    }
   }
 }
 
