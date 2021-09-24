@@ -18,6 +18,7 @@ ritest(
   stack = NULL,
   stack_lim = 1L,
   seed = NULL,
+  pb = FALSE,
   verbose = FALSE,
   ...
 )
@@ -77,6 +78,13 @@ time? Default is 1 GB.}
 \item{seed}{Integer. Random seed for reproducible results. Note that the
 choice of parallel behaviour can alter results even when using the same
 seed. See the note on random number generation below.}
+
+\item{pb}{Logical. Display a progress bar? Default is FALSE. Note that
+progress bars can add a surprising amount of computational overhead to
+iterative functions. I've therefore set the number of updating steps
+--- i.e. via the `nout` argument of [pbapply::pboptions()] --- to 5, which
+should limit this kind of overhead in the event that a user invokes the
+`pb = TRUE` argument.}
 
 \item{verbose}{Logical. Display the underlying model `object` summary and
 `ritest` return value? Default is `FALSE`.}

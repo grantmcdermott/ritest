@@ -29,6 +29,7 @@ Imports:
     parallel,
     parallelly,
     data.table,
+    pbapply,
     fixest (>= 0.10.0)
 Remotes:
     lrberge/fixest

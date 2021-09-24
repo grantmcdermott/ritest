@@ -49,6 +49,12 @@
 #' @param seed Integer. Random seed for reproducible results. Note that the
 #'   choice of parallel behaviour can alter results even when using the same
 #'   seed. See the note on random number generation below.
+#' @param pb Logical. Display a progress bar? Default is FALSE. Note that
+#'   progress bars can add a surprising amount of computational overhead to
+#'   iterative functions. I've therefore set the number of updating steps
+#'   --- i.e. via the `nout` argument of [pbapply::pboptions()] --- to 5, which
+#'   should limit this kind of overhead in the event that a user invokes the
+#'   `pb = TRUE` argument.
 #' @param verbose Logical. Display the underlying model `object` summary and
 #'   `ritest` return value? Default is `FALSE`.
 #' @param ... Additional arguments. Currently ignored.
@@ -109,6 +115,7 @@
 #'   are supported.
 #' @seealso [print.ritest()], [plot.ritest()]
 #' @import data.table
+#' @importFrom pbapply pbsapply
 #' @importFrom grDevices rgb
 #' @importFrom graphics abline hist title
 #' @importFrom stats .lm.fit coefficients complete.cases confint density
@@ -179,12 +186,22 @@ ritest = function(object,
                   stack = NULL,
                   stack_lim = 1L,
                   seed = NULL,
+                  pb = FALSE,
                   verbose = FALSE,
                   ...) {
 
   ## Silence NSE notes in R CMD check. See:
   ## https://cran.r-project.org/web/packages/data.table/vignettes/datatable-importing.html#globals
   orig_order = .ii = treat = nn = treat_samp = NULL
+
+  ## Temp vars that we'll be using later
+  DT = DATA = strata_split = cluster_split = split_list = cl = NULL
+
+  if (!pb) {
+    opb = pbapply::pboptions(type = if (interactive()) "timer" else "none")
+    pbapply::pboptions(type = 'none')
+    on.exit(pbapply::pboptions(opb))
+    }
 
   pvals = match.arg(pvals)
 
@@ -200,7 +217,6 @@ ritest = function(object,
   fixest_obj = inherits(object, c('fixest', 'fixest_multi'))
 
   if (inherits(object, c('lm'))) {
-    # Ymat = object$model[, 1, drop = FALSE]
     Ymat = object$model[, 1]
   } else if (fixest_obj) {
     Ymat = model.matrix(object, type = 'lhs', as.matrix = TRUE)
@@ -246,8 +262,6 @@ ritest = function(object,
   }
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
   Xtreat = Xmat[,resampvar_pos]
-
-  DT = DATA = strata_split = cluster_split = split_list = NULL
 
   prep_split_var = function(x) {
     if (inherits(x, "formula")) {
@@ -399,63 +413,51 @@ ritest = function(object,
       pcores = ceiling(parallelly::availableCores()/2L)
     }
 
-  }
+    if (ptype=='fork') {
 
+      cl = pcores
 
-  ## Generic function for iterating over the simulations depending on the
-  ## parallel and stacking strategies.
-  applyfun =
-
-    if (!parallel) {
-
-      if (verbose) cat("\nRunning", reps, "RI simulations sequentially.")
-      sapply
+      if (verbose) cat("\nRunning", reps, "parallel RI simulations as forked",
+                       "processes across", pcores, "CPU cores.")
 
     } else {
 
-      if (ptype=='psock') {
+      if (!stack) {
+        ## Experimenting, I find a sharp decrease in psock performance with
+        ## pcores > 4 when the data aren't stacked and we require that sampling
+        ## remain constant within clusters. I'm not entirely sure why (probably
+        ## (something to do with the overhead), so we'll set this as the maximum
+        ## level to safeguard.
+        if (!is.null(cluster)) pcores = min(pcores, 4L)
+        setDTthreads(1L)        ## avoid nested parallelism
+        on.exit(setDTthreads(), add = TRUE) ## reset after function exists
+      }
 
-        if (!stack) {
-          ## Experimenting, I find a sharp decrease in psock performance with
-          ## pcores > 4 when the data aren't stacked and we require that sampling
-          ## remain constant within clusters. I'm not entirely sure why (probably
-          ## (something to do with the overhead), so we'll set this as the maximum
-          ## level to safeguard.
-          if (!is.null(cluster)) pcores = min(pcores, 4L)
-          setDTthreads(1L)        ## avoid nested parallelism
-          on.exit(setDTthreads()) ## reset after function exists
-        }
+      cl = parallel::makeCluster(pcores)
+      on.exit(parallel::stopCluster(cl), add = TRUE)
 
-        cl = parallel::makeCluster(pcores)
-        on.exit(parallel::stopCluster(cl), add = TRUE)
+      parallel::clusterEvalQ(cl, c(library(data.table)))
+      parallel::clusterExport(
+        cl, c("DT", "split_list", "Xtreat", "stack", "Xmat", "Xmat_dm",
+              "Ymat", "Ymat_dm", "fmat", "onames"),
+        envir=environment()
+      )
+      parallel::clusterSetRNGStream(cl, seed)
 
-        parallel::clusterEvalQ(cl, c(library(data.table)))
-        parallel::clusterExport(
-          cl, c("DT", "split_list", "Xtreat", "stack", "Xmat", "Xmat_dm",
-                "Ymat", "Ymat_dm", "fmat", "onames"),
-          envir=environment()
-        )
-        parallel::clusterSetRNGStream(cl, seed)
-
-        if (verbose) cat("\nRunning", reps, "parallel RI simulations in a PSOCK",
-                         "cluster across", pcores, "CPU cores.")
-
-        function(X, FUN, ...) simplify2array(parallel::parLapply(cl = cl, X, FUN, ...))
-
-      } else {
-
-        if (verbose) cat("\nRunning", reps, "parallel RI simulations as forked",
-                         "processes across", pcores, "CPU cores.")
-
-        function(X, FUN, ...) simplify2array(parallel::mclapply(X, FUN, ..., mc.cores = pcores))
+      if (verbose) cat("\nRunning", reps, "parallel RI simulations in a PSOCK",
+                       "cluster across", pcores, "CPU cores.")
 
       }
 
-    }
+  } else {
+
+    if (verbose) cat("\nRunning", reps, "RI simulations sequentially.")
+
+  }
 
 
   ## Run the sims
-  betas = applyfun(1:reps, ri_sims)
+  betas = pbapply::pbsapply(1:reps, ri_sims, cl = cl)
 
 
   ## Parametric values
