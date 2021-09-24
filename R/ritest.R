@@ -376,16 +376,17 @@ ritest = function(object,
       return(beta_samp)
     }
 
-  ## Run the simulations
+
+  ## Parallel strategy
   if (parallel) {
 
     ptype = match.arg(ptype)
     if (ptype=='auto') {
       if (.Platform$OS.type == "windows") {
         ptype = 'psock'
-        } else {
-          ptype = 'fork'
-        }
+      } else {
+        ptype = 'fork'
+      }
     }
 
     if (is.null(pcores)) {
@@ -398,40 +399,64 @@ ritest = function(object,
       pcores = ceiling(parallelly::availableCores()/2L)
     }
 
-    if (ptype=='psock') {
-      if (!stack) {
-        ## Experimenting, I find a sharp decrease in psock performance with
-        ## pcores > 4 when the data aren't stacked and we require that sampling
-        ## remain constant within clusters. I'm not entirely sure why (probably
-        ## (something to do with the overhead), so we'll set this as the maximum
-        ## level to safeguard.
-        if (!is.null(cluster)) pcores = min(pcores, 4L)
-        setDTthreads(1L) ## avoid nested parallelism
-        }
-      cl = parallel::makeCluster(pcores)
-      parallel::clusterEvalQ(cl, c(library(data.table)))
-      parallel::clusterExport(
-        cl, c("DT", "split_list", "Xtreat", "stack", "Xmat", "Xmat_dm",
-              "Ymat", "Ymat_dm", "fmat", "onames"),
-        envir=environment()
-        )
-      parallel::clusterSetRNGStream(cl, seed)
-      if (verbose) cat("\nRunning", reps, "parallel RI simulations in a PSOCK",
-                       "cluster across", pcores, "CPU cores.")
-      betas = parallel::parLapply(cl = cl, 1:reps, ri_sims)
-      parallel::stopCluster(cl)
-      if (!stack) setDTthreads()
-    } else {
-      if (verbose) cat("\nRunning", reps, "parallel RI simulations as forked",
-                       "processes across", pcores, "CPU cores.")
-      betas = parallel::mclapply(1:reps, ri_sims, mc.cores = pcores)
-    }
-    betas = simplify2array(betas)
-
-  } else {
-    if (verbose) cat("\nRunning", reps, "RI simulations sequentially.")
-    betas = sapply(1:reps, ri_sims)
   }
+
+
+  ## Generic function for iterating over the simulations depending on the
+  ## parallel and stacking strategies.
+  applyfun =
+
+    if (!parallel) {
+
+      if (verbose) cat("\nRunning", reps, "RI simulations sequentially.")
+      sapply
+
+    } else {
+
+      if (ptype=='psock') {
+
+        if (!stack) {
+          ## Experimenting, I find a sharp decrease in psock performance with
+          ## pcores > 4 when the data aren't stacked and we require that sampling
+          ## remain constant within clusters. I'm not entirely sure why (probably
+          ## (something to do with the overhead), so we'll set this as the maximum
+          ## level to safeguard.
+          if (!is.null(cluster)) pcores = min(pcores, 4L)
+          setDTthreads(1L)        ## avoid nested parallelism
+          on.exit(setDTthreads()) ## reset after function exists
+        }
+
+        cl = parallel::makeCluster(pcores)
+        on.exit(parallel::stopCluster(cl), add = TRUE)
+
+        parallel::clusterEvalQ(cl, c(library(data.table)))
+        parallel::clusterExport(
+          cl, c("DT", "split_list", "Xtreat", "stack", "Xmat", "Xmat_dm",
+                "Ymat", "Ymat_dm", "fmat", "onames"),
+          envir=environment()
+        )
+        parallel::clusterSetRNGStream(cl, seed)
+
+        if (verbose) cat("\nRunning", reps, "parallel RI simulations in a PSOCK",
+                         "cluster across", pcores, "CPU cores.")
+
+        function(X, FUN, ...) simplify2array(parallel::parLapply(cl = cl, X, FUN, ...))
+
+      } else {
+
+        if (verbose) cat("\nRunning", reps, "parallel RI simulations as forked",
+                         "processes across", pcores, "CPU cores.")
+
+        function(X, FUN, ...) simplify2array(parallel::mclapply(X, FUN, ..., mc.cores = pcores))
+
+      }
+
+    }
+
+
+  ## Run the sims
+  betas = applyfun(1:reps, ri_sims)
+
 
   ## Parametric values
   if (fixest_obj) {
