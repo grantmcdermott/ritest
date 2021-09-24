@@ -11,20 +11,21 @@ table_2_2 = data.frame(Z = c(1, 0, 0, 0, 0, 0, 1),
 est = lm(Y ~ Z, table_2_2)
 
 #
-# Forked processes
+# Forked processes (skip on windows)
 #
 
-ritest_est = ritest(est, 'Z', reps = 1e3, seed = 42L, pcores = 2L)
-ritest_est_fml = ritest(est, ~Z, reps = 1e3, seed = 42L, pcores = 2L)
+if (.Platform$OS.type != "windows") {
+  ritest_est = ritest(est, 'Z', reps = 1e3, seed = 42L, pcores = 2L)
+  ritest_est_fml = ritest(est, ~Z, reps = 1e3, seed = 42L, pcores = 2L)
 
-# Test that character and formula results are the same
-expect_equal(ritest_est, ritest_est_fml)
+  # Test that character and formula results are the same
+  expect_equal(ritest_est, ritest_est_fml)
 
-# Test p-value
-expect_equal(as.numeric(ritest_est$pval), 0.373, tolerance = 1e-03)
-# Test CI
-expect_equal(as.numeric(ritest_est$ci), c(0.3316, 0.4144), tolerance = 1e-04)
-
+  # Test p-value
+  expect_equal(as.numeric(ritest_est$pval), 0.373, tolerance = 1e-03)
+  # Test CI
+  expect_equal(as.numeric(ritest_est$ci), c(0.3316, 0.4144), tolerance = 1e-04)
+}
 
 #
 # Sequential and PSOCK processes (will yield different results)
