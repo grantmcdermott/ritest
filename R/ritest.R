@@ -316,13 +316,12 @@ ritest = function(object,
       data.table::setkey(DT, .ii, strata)
       if(is.null(cluster)) {
         DT_prepped = DT[,
-                        list(orig_order, treat_samp = sample(treat)),
+                        list(orig_order, treat_samp = treat[sample.int(.N)]),
                         by = list(.ii, strata)]
         data.table::setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
       } else {
         DT2 = DT[data.table::rowid(.ii, strata, cluster)==1L]
-        DT2[, nn := data.table::rowid(.ii, strata)]
-        DT2[, treat_samp := treat[sample(nn)], by = list(.ii, strata)]
+        DT2[, treat_samp := treat[sample.int(.N)], by = list(.ii, strata)]
         DT_prepped = DT[DT2[, list(.ii, strata, cluster, treat_samp)],
                         on = list(.ii, strata, cluster)]
         data.table::setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
