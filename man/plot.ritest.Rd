@@ -67,7 +67,7 @@ est2 = feols(yield ~ N + P + K | block, vcov = 'iid', data = npk)
 
 # Re-do our RI from before, but this time permute within the 'block' strata.
 
-est2_ri = ritest(est2, 'N', reps = 1e3, strata = 'block', seed = 99L, verbose = TRUE)
+est2_ri = ritest(est2, 'N', strata = 'block', reps = 1e3, seed = 99L, verbose = TRUE)
 
 # Again, the RI rejection rate (0.003) is very similar to the parametric
 # p-value (0.004) from the regression model. You probably want to increase
@@ -75,15 +75,10 @@ est2_ri = ritest(est2, 'N', reps = 1e3, strata = 'block', seed = 99L, verbose = 
 
 # Some asides...
 
-# Formula interfaces are supported if you don't like writing variables as
-# strings. You can also pipe everything, e.g. using the native pipe if you
-# are on R >=4.1.0. For example:
+# Formula interfaces are supported if you don't like writing variables (i.e.
+# the treatment and/or strata and cluster arguments) as strings.
 
-if (getRversion() >= '4.1.0') {
-  feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
-    ritest(~N, reps = 1e3, strata = ~block, seed = 99L) |>
-    plot()
-}
+ritest(est2, ~N, strata = ~block, reps = 1e3, seed = 99L)
 
 # If you don't like the default plot method and would prefer to use ggplot2,
 # then that's easily done. Just extract the beta values from the return object.
