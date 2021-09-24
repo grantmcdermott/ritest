@@ -155,11 +155,13 @@
 #'
 #' # Formula interfaces are supported if you don't like writing variables as
 #' # strings. You can also pipe everything, e.g. using the native pipe if you
-#' # are on R >=4.1.1. For example:
+#' # are on R >=4.1.0. For example:
 #'
-#' feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
-#'   ritest(~N, reps = 1e3, strata = ~block, seed = 99L) |>
-#'   plot()
+#' if (getRversion() >= '4.1.0') {
+#'   feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
+#'     ritest(~N, reps = 1e3, strata = ~block, seed = 99L) |>
+#'     plot()
+#' }
 #'
 #' # If you don't like the default plot method and would prefer to use ggplot2,
 #' # then that's easily done. Just extract the beta values from the return object.
