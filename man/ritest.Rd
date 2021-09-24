@@ -2,7 +2,7 @@
 % Please edit documentation in R/ritest.R
 \name{ritest}
 \alias{ritest}
-\title{Perform random inference on a model object}
+\title{Perform randomization inference on a model object}
 \usage{
 ritest(
   object,
@@ -88,7 +88,7 @@ An list object of class `ritest`. Default print and plotting methods
   are supported.
 }
 \description{
-Perform random inference (RI) testing on a model object, e.g. a
+Perform randomization inference (RI) testing on a model object, e.g. a
   coefficient from a linear regression model. It tries to mimic the `ritest`
   Stata routine (Heß, 2017) in its design and functionality. The package is
   quite experimental and only a subset of this functionality is currently
@@ -111,7 +111,7 @@ The use of parallelism in computation introduces some well-known
   reproducible results, irrespective of the choice of parallel strategy.
   These include the use of "L'Ecuyer-CMRG" RNG kind and the default behaviour
   of "stacking" the permuted results in memory before passing them on to the
-  fitting stage of the random inference routine (where the fitting would
+  fitting stage of the randomization inference routine (where the fitting would
   still be done in parallel). To briefly dwell on the latter, note that this
   stacking behaviour is very similar to --- I nearly wrote "parallels" ---
   the approach adopted by `boot` and other packages that trade off RNG with
@@ -133,7 +133,7 @@ The use of parallelism in computation introduces some well-known
   users can always ensure perfect reproducibility by explicitly defining the
   number of required cores in the `ritest()` call via the `pcores` argument.
   Stepping back, the focus on reproducible exactitude rather misses the
-  point in an exercise like random inference testing. Much more important is
+  point in an exercise like randomization inference testing. Much more important is
   running enough permutation trials so that your rejection rates are stable
   and any minor differences due to different RNG seeds are moot. Remember,
   the ultimate goal of inference (and research) isn't simply to generate

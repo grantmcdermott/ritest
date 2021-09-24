@@ -218,7 +218,7 @@ ritest = function(object,
 
   Xmat = model.matrix(object)
 
-  fmat = NULL
+  fmat = Xmat_dm = Ymat_dm = NULL
   if (fixest_obj && !is.null(object$fixef_vars)) {
     fmat = model.matrix(object, type = 'fixef')
     Xmat_dm = fixest::demean(Xmat, fmat)
@@ -348,6 +348,9 @@ ritest = function(object,
       DT = DT_prep(DT)
     }
 
+  } else {
+    ## No stacking if neither strata nor cluster vars are defined
+    stack = FALSE
   }
 
   ## Simulation function
@@ -419,6 +422,7 @@ ritest = function(object,
               "Ymat", "Ymat_dm", "fmat", "onames"),
         envir=environment()
         )
+      parallel::clusterSetRNGStream(cl, seed)
       if (verbose) cat("\nRunning", reps, "parallel RI simulations in a PSOCK",
                        "cluster across", pcores, "CPU cores.")
       betas = parallel::parLapply(cl = cl, 1:reps, ri_sims)
