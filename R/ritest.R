@@ -317,7 +317,7 @@ ritest = function(object,
       if(is.null(cluster)) {
         DT_prepped = DT[,
                         list(orig_order, treat_samp = sample(treat)),
-                        by = .(.ii, strata)]
+                        by = list(.ii, strata)]
         data.table::setorder(DT_prepped, .ii, orig_order) ## Back to original order for fitting
       } else {
         DT2 = DT[data.table::rowid(.ii, strata, cluster)==1L]
