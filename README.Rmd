@@ -62,14 +62,14 @@ ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
 
 where: 
 
-- `object` is a model object (e.g. a linear regression)
-- `resampvar` is the variable that you want to resample (i.e. permute)
-- `reps` is the number of simulations (i.e. permutations)
+- `object` is a model object (e.g. a linear regression).
+- `resampvar` is the variable that you want to resample (i.e. permute).
+- `reps` is the number of simulations (i.e. permutations).
 - `strata` is a variable defining the stratification (aka "blocking") of the 
 experimental design, if any.
 - `cluster` is a variable defining the clustering of treatment in the 
 experimental design, if any.
-- `...` are other arguments, including the ability to set a random seed for
+- `...` are other arguments. This includes the ability to set a random seed for
 reproducibility, controlling the parallelism behaviour, adding a progress bar,
 etc. See `?ritest` for more information.
 
@@ -84,8 +84,8 @@ dataset.
 est = lm(yield ~ N + P + K, data = npk)
 ```
 
-Say we're particularly interested in the yield effect of 'N' (i.e. nitrogen).
-We want to known whether our inferential reasoning about this parameter is 
+Let's say we're interested in the yield effect of 'N' (i.e. nitrogen).
+We want to know whether our inferential reasoning about this parameter is 
 robust to using RI, as opposed to just relying on the parametric t-test and 
 p-value produced by our linear regression model. We'll do 1,000
 simulations and, just for illustration, limit the number of parallel cores to 2. 
@@ -99,7 +99,11 @@ including the original regression model summary.
 est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 ```
 
-We can also visualize the result using the default `plot` method. This function 
+In this simple case, our parametric results appear to hold up very well. The
+original p-value of 0.019 is very close to the equivalent rejection rate
+of 0.021 that we get with our RI procedure.
+
+We can also visualize this result using the default `plot` method. The function 
 takes several arguments for added customization. But here I'll just show how to
 add the parametric 95 percent confidence interval (i.e. from the original linear 
 regression) in addition the simulated rejection regions.
@@ -110,25 +114,28 @@ plot(est_ri, show_parm = TRUE)
 
 A more realistic implementation would control for the stratified (aka "blocked")
 experimental design. We'll specify these strata (blocks) as fixed-effects in 
-our regression model. Again, we obtain an RI ejection rate (0.003) that is very 
-similar to the parametric p-value (0.004) from the regression model.
+our regression model. I'll also use this as an opportunity to show that that the
+package is fully compatible with piping workflows. This might be useful if you
+don't feel like saving intermediate objects. Here I'll use the new base R pipe 
+(`|>`) that was introduced in R 4.1.1, but the same thing would be possible with
+the popular magrittr pipe (`%>%`).
 
 ```{r est2}
 # library(fixest) ## Already loaded
 
-est2 = feols(yield ~ N + P + K | block, vcov = 'iid', data = npk)
-
-# Re-do our RI from before, but this time permute within the 'block' strata.
-# ritest(est2, ~N, strata = ~block, reps = 1e3, seed = 99L) ## Again, formulas work
-ritest(est2, 'N', strata = 'block', reps = 1e3, seed = 99L)
+feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
+  ritest('N', strata = 'block', reps = 1e3, seed = 99L)
 ```
+
+Again, we obtain an RI rejection rate (0.003) that is very 
+similar to the parametric p-value (0.004) from the regression model.
 
 ### Real-life data
 
 Next, we'll replicate an example in David McKenzie's nice 
 [blog post](https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata)
 about the Stata `ritest` routine. The dataset in question derives from a 
-randomized control trial about supply chains, which was conducted in Columbia. 
+randomized control trial about supply chains in Columbia. 
 You can download the data from David's website 
 [here](https://drive.google.com/open?id=0B9C9RwWKZrUNazdyVXFkSTlTNGc) (also 
 includes code and data for some other examples.)
@@ -137,8 +144,8 @@ includes code and data for some other examples.)
 
 First, here is the Stata code and output. I won't go into detail about the 
 actual research question that we're trying to address. (See David's blog post 
-for more on that.) However, the essential thing to know is that I'm going to run 
-5,000 RI permutations on a pretty standard fixed-effect model, _whilst_ 
+for more on that.) The essential thing to know is that I'm going to run 
+5,000 RI permutations on a pretty standard fixed-effect model, whilst 
 accounting for the stratified and clustered design of the experiment. 
 
 (Aside: I'm also snipping most of the Stata output, so as to only highlight the 
@@ -192,14 +199,12 @@ Like David, this takes around **3 minutes** to run on my laptop.
 Now, the R equivalent with this package.
 
 ```{r co_ri}
-## Load the data
 co = haven::read_dta('~/clusterColombia.dta')
 
 co_est = 
   feols(
     dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, 
-    cluster = ~b_block,        
-    data = co
+    vcov = ~b_block, data = co
     )
 
 tic = Sys.time()
@@ -212,7 +217,7 @@ co_ri
 
 Using the same random seed is a bit of performance art. We won't get exactly
 the same results across two different languages. But the important thing to note 
-is that they are _functionally_ equivalent (rejection probability of 0.106 vs
+is that they are functionally equivalent (rejection probability of 0.106 vs
 0.104).
 
 One nice feature of this implementation is that it should complete very quickly. 
