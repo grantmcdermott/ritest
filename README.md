@@ -10,7 +10,8 @@
 
 An experimental R port of the
 **[`ritest`](https://github.com/simonheb)** Stata routine for
-randomization inference by [Simon Heß](https://github.com/simonheb).
+randomization inference (RI) by [Simon
+Heß](https://github.com/simonheb).
 
 Fast and user-friendly. Currently limited to `lm()` and
 `fixest::feols()` models, but aims to support a variety of model classes
@@ -32,9 +33,9 @@ running the above command. (Click on the relevant link to install.)
 
 ## Examples
 
-First, load the **ritest** package. I’ll also load the **fixest** and
-**haven** packages to help demonstrate some additional functionality in
-the examples that follow.
+Let’s start by loading the **ritest** package. I’ll also load the
+**fixest** and **haven** packages to help demonstrate some additional
+functionality in the examples that follow.
 
 ``` r
 library(ritest)
@@ -42,9 +43,30 @@ library(fixest) ## Note: ritest requires fixest version >= 0.10.0
 library(haven)  ## For reading .dta files
 ```
 
+The `ritest()` function supports a variety of arguments, but the basic
+syntax is
+
+``` r
+ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
+```
+
+where:
+
+-   `object` is a model object (e.g. a linear regression)
+-   `resampvar` is the variable that you want to resample (i.e. permute)
+-   `reps` is the number of simulations (i.e. permutations)
+-   `strata` is a variable defining the stratification (aka “blocking”)
+    of the experimental design, if any.
+-   `cluster` is a variable defining the clustering of treatment in the
+    experimental design, if any.
+-   `...` are other arguments, including the ability to set a random
+    seed for reproducibility, controlling the parallelism behaviour,
+    adding a progress bar, etc. See `?ritest` for more information.
+
 ### Toy data
 
-Here’s a naive example using the inbuilt
+Our first example will be a rather naive implementation using the
+inbuilt
 [`nkp`](https://vincentarelbundock.github.io/Rdatasets/doc/MASS/npk.html)
 dataset.
 
@@ -52,12 +74,15 @@ dataset.
 est = lm(yield ~ N + P + K, data = npk)
 ```
 
-Conduct RI on the ‘N’ (i.e. nitrogen) coefficient. We’ll do 1,000
-simulations and, just for illustration, limit the number of parallel
-cores to 2. (The default parallel behaviour will use half of the
-available cores on a user’s machine.) The ‘verbose = TRUE’ argument
-simply prints the results upon completion, including the original
-regression model summary.
+Say we’re particularly interested in the yield effect of ‘N’
+(i.e. nitrogen). We want to known whether our inferential reasoning
+about this parameter is robust to using RI, as opposed to just relying
+on the parametric t-test and p-value produced by our linear regression
+model. We’ll do 1,000 simulations and, just for illustration, limit the
+number of parallel cores to 2. (The default parallel behaviour will use
+half of the available cores on a user’s machine.) The ‘verbose = TRUE’
+argument simply prints the results upon completion, including the
+original regression model summary.
 
 ``` r
 # est_ri = ritest(est, ~N, reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE) ## Formulas work too
@@ -171,7 +196,7 @@ that I’m going to run 5,000 RI permutations on a pretty standard
 fixed-effect model, *whilst* accounting for the stratified and clustered
 design of the experiment.
 
-(Aside: I’m also snipping most of the Stata output so as too only
+(Aside: I’m also snipping most of the Stata output, so as to only
 highlight the main command and result.)
 
 ``` stata
