@@ -175,7 +175,7 @@ design of the experiment.
 highlight the main command and result.)
 
 ``` stata
-. use "~/Colombia13.dta", clear
+. use "~/clusterColombia.dta", clear
 
 . 
 . timer on 1
