@@ -18,7 +18,7 @@
 #' @param strata Character or one-sided formula. Permute `resampvar` within
 #'   strata (AKA blocks)? See Details and Examples below.
 #' @param cluster Character or one-sided formula. Keep `resampvar` constant
-#'   within clusters? See Details and Examples below.#'
+#'   within clusters? See Details and Examples below.
 #' @param pvals Character. How should the test values should be computed? The
 #'   default is "both", which means that two-sided p-values will be computed.
 #'   Alternatively, users can specify one-sided p-values with either "left" or

@@ -44,7 +44,7 @@ Alternatively, users can specify one-sided p-values with either "left" or
 strata (AKA blocks)? See Details and Examples below.}
 
 \item{cluster}{Character or one-sided formula. Keep `resampvar` constant
-within clusters? See Details and Examples below.#'}
+within clusters? See Details and Examples below.}
 
 \item{level}{Numeric. The desired confidence level. Default if 0.95.}
 
