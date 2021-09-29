@@ -30,9 +30,8 @@ Imports:
     parallelly,
     data.table,
     pbapply,
-    fixest (>= 0.10.0)
-Remotes:
-    lrberge/fixest
+    fixest (>= 0.10.0),
+    multcomp
 Suggests: 
     tinytest,
     ggplot2

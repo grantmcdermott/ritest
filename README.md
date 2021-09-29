@@ -24,13 +24,6 @@ once it is fully baked.
 remotes::install_github("grantmcdermott/ritest")
 ```
 
-Note that **ritest** currently depends on the development version
-(0.10.0) of **fixest**. If you’re on
-[Windows](https://cran.r-project.org/bin/windows/Rtools/) or
-[Mac](https://github.com/rmacoslib/r-macos-rtools#how-do-i-use-the-installer)
-then you’ll need *Rtools* for compiling the underlying C++ code before
-running the above command. (Click on the relevant link to install.)
-
 ## Examples
 
 Let’s start by loading the **ritest** package. I’ll also load the
