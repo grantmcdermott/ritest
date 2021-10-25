@@ -31,8 +31,10 @@ Imports:
     data.table,
     pbapply,
     fixest (>= 0.10.0),
-    multcomp
+    multcomp,
+    generics
 Suggests: 
     tinytest,
-    ggplot2
+    ggplot2,
+    broom
 RoxygenNote: 7.1.2
