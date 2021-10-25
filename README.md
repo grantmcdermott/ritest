@@ -219,7 +219,7 @@ the parametric p-value (0.004) from the regression model.
 Next, we’ll replicate an example in David McKenzie’s nice [blog
 post](https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata)
 about the Stata `ritest` routine. The dataset in question derives from a
-randomized control trial about supply chains in Columbia. You can
+randomized control trial about supply chains in Colombia. You can
 download the data from David’s website
 [here](https://drive.google.com/open?id=0B9C9RwWKZrUNazdyVXFkSTlTNGc)
 (also includes code and data for some other examples.)
