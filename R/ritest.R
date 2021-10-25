@@ -12,6 +12,14 @@
 #' @param resampvar Character or one-sided formula. The variable (coefficient)
 #'   that you want to conduct RI on. At present, only a single variable is
 #'   permitted.
+#' @param h0 Character. The sharp null hypothesis to be tested. In the most
+#'   common case, you can safely omit this argument and the function will
+#'   automatically implement a standard two-sided test (on `resampvar`) against
+#'   a null value of zero. Otherwise, it should be an (in)equality sign followed
+#'   by a number. Examples include '=0' (i.e the same two-sided test as the
+#'   default), or '>=0' and '<=0 (i.e. the one-sided equivalents). Similarly,
+#'   you may test against a value other than zero (e.g. '>=1'). However, note
+#'   that multiple comparison tests (e.g. b1 - b2 = 0) are not yet supported.
 #' @param reps Integer. The number of repetitions (permutation draws) in the RI
 #'   simulation. Default is 100, but you probably want more that that. Young
 #'   (2019) finds that rejection rates stabilise at around 2,000 draws.
@@ -19,10 +27,6 @@
 #'   strata (AKA blocks)? See Details and Examples below.
 #' @param cluster Character or one-sided formula. Keep `resampvar` constant
 #'   within clusters? See Details and Examples below.
-#' @param pvals Character. How should the test values should be computed? The
-#'   default is "both", which means that two-sided p-values will be computed.
-#'   Alternatively, users can specify one-sided p-values with either "left" or
-#'   "right".
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param stack Logical. Should the permuted data be stacked in memory all at
 #'   once, rather than being recalculated during each iteration? Stacking takes
@@ -173,12 +177,12 @@
 #'
 ritest = function(object,
                   resampvar,
+                  h0 = NULL,
+                  # alternative = c("two.sided", "less", "greater", "both",  "left", "right"),
                   reps = 100,
-                  pvals = c("both", "left", "right"),
                   strata = NULL,
                   cluster = NULL,
                   # fixlevels = NULL,
-                  # h0 = NULL,
                   level = 0.95,
                   parallel = TRUE,
                   ptype = c('auto', 'fork', 'psock'),
@@ -201,12 +205,24 @@ ritest = function(object,
     opb = pbapply::pboptions(type = if (interactive()) "timer" else "none")
     pbapply::pboptions(type = 'none')
     on.exit(pbapply::pboptions(opb))
-    }
-
-  pvals = match.arg(pvals)
+  }
 
   if (inherits(resampvar, "formula")) {
     resampvar = strsplit(paste0(resampvar)[2], split = ' \\+ ')[[1]]
+  }
+
+  # alternative = match.arg(alternative)
+  # alternative_alias = c('two.sided'='both', 'less'='left', 'greater'='right')
+  # if (alternative %in% alternative_alias) alternative = names(alternative_alias)[match(alternative, alternative_alias)]
+  # h0_symbol = c('two.sided'='=', 'less'='>=', 'greater'='<=') ## See ?multcomp::glht
+  if (is.null(h0)) {
+    h0_value = 0L
+    h0_symbol = '='
+  } else {
+    h0 = gsub('[[:space:]]', '', h0)
+    h0_value = as.numeric(gsub('.*=|<|>', '', h0))
+    h0_symbol = gsub(h0_value, '', h0)
+    if (!grepl('=$', h0_symbol)) h0_symbol = paste0(h0_symbol, '=')
   }
 
   if(!is.null(seed)) {
@@ -260,6 +276,7 @@ ritest = function(object,
            'the `ritest` function with the `verbose = TRUE` argument.')
       }
   }
+  h0_string = paste(resampvar, h0_symbol, h0_value)
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
   Xtreat = Xmat[,resampvar_pos]
 
@@ -455,43 +472,68 @@ ritest = function(object,
 
   }
 
-
   ## Run the sims
   betas = pbapply::pbsapply(1:reps, ri_sims, cl = cl)
 
-
   ## Parametric values
-  if (fixest_obj) {
-    coeftab = fixest::coeftable(object)
+  ci_sides = 1:2
+  if (h0_value==0 && h0_symbol=='=') {
+    if (fixest_obj) {
+      coeftab = fixest::coeftable(object)
+    } else {
+      coeftab = summary(object)$coefficients
+    }
+    ci_parm = confint(object, level = level)
+    ci_parm = ci_parm[rownames(ci_parm)==resampvar,]
   } else {
-    coeftab = summary(object)$coefficients
+    glht_summ =
+      if (fixest_obj) {
+        ## Need two minor adjustments for fixest objects, since there's
+        ## currently no dedicated glht.fixest method:
+        ## 1) Suppress harmless (but annoying) warning message about
+        ## unrecognised complete = FALSE argument (passed via ...)
+        ## 2) Need manual DoF override to get right SEs / CIs.
+        summary(suppressWarnings(
+          multcomp::glht(object, h0_string,
+                         df=fixest::degrees_freedom(object, type = 'resid'), ...)
+          ))
+        } else {
+          summary(multcomp::glht(object, h0_string, ...))
+        }
+    coeftab = data.frame(glht_summ$test[c("coefficients", "sigma", "tstat", "pvalues")])
+    ci_parm = confint(glht_summ)$confint[, c('lwr', 'upr')[ci_sides]]
   }
-  beta_parm = coeftab[resampvar, 'Estimate']
-  pval_parm = coeftab[resampvar, 'Pr(>|t|)']
+  # beta_parm = coeftab[resampvar, 'Estimate']
+  # pval_parm = coeftab[resampvar, 'Pr(>|t|)']
+  beta_parm = coeftab[resampvar, 1]
+  pval_parm = coeftab[resampvar, 4]
 
 
-  if (pvals=='both') {
-    probs = abs(betas) >= abs(beta_parm)
-  } else if (pvals=='left') {
-    probs = betas <= beta_parm
+  if (h0_symbol=='=') {
+    probs = abs(betas) >= abs(beta_parm - h0_value)
+  # } else {
+  #   probs = eval(parse(text = paste(betas, h0_symbol, beta_parm, '-', h0_value)))
+  # }
+  } else if (h0_symbol=='<=') {
+    ## Note: we have to reverse the inequality
+    probs = betas >= beta_parm - h0_value
   } else {
-    probs = betas >= beta_parm
+    probs = betas <= beta_parm - h0_value
   }
   count = sum(probs)
   pval = count/reps
-  attr(pval, 'side') = pvals
+  attr(pval, 'side') = h0_symbol
   # se = sd(probs)/sqrt(reps)
   # ci = quantile(probs, abs(c(0, 1) - alpha))
   se = qnorm(level) * sd(probs) / sqrt(reps)
   ci = qnorm(level) * se
-  ci = pval + c(-ci, ci)
+  ci = pval + c(-ci, ci)[ci_sides]
   alpha = 1-level
-  names(ci) = paste0('CI ', c(alpha/2, 1-alpha/2)*100, '%')
-  ci_parm = confint(object)
-  ci_parm = ci_parm[rownames(ci_parm)==resampvar,]
+  names(ci) = paste0('CI ', c(alpha/2, 1-alpha/2)*100, '%')[ci_sides]
 
   out = list(call = call_string,
              resampvar = resampvar,
+             h0 = h0_string,
              reps = reps,
              strata = strata,
              cluster = cluster,
@@ -531,9 +573,9 @@ print.ritest = function(x, verbose = FALSE, ...) {
   ri_mat_nms = names(ri_mat)
   ri_mat = sprintf(ri_mat, fmt = '%.4g')
   names(ri_mat) = ri_mat_nms
-  pval_string = if (attr(x$pval, 'side')=='both') {
+  pval_string = if (attr(x$pval, 'side') %in% c('=', '==')) {
     "Note: c = #{|T| >= |T(obs)|}"
-  } else if (attr(x$pval, 'side')=='left') {
+  } else if (attr(x$pval, 'side')=='<=') {
     "Note: c = #{T <= T(obs)}"
   } else {
     "Note: c = #{T >= T(obs)}"
@@ -545,7 +587,7 @@ print.ritest = function(x, verbose = FALSE, ...) {
         "* ORIGINAL MODEL *",
         "******************",
         sep = "\n")
-    cat("\n", x$object_summ_string, "\n\n", sep = "")
+    cat(x$object_summ_string, "\n\n", sep = "")
     cat("******************",
         "* RITEST RESULTS *",
         "******************",
@@ -555,6 +597,7 @@ print.ritest = function(x, verbose = FALSE, ...) {
 
   cat("\nCall: ", x$call, "\n", sep = "")
   cat("Res. var(s): ", x$resampvar, "\n", sep = "")
+  cat("H0: ", x$h0, "\n", sep = "")
   cat("Strata var(s): ", x$strata, "\n", sep = "")
   cat("Strata: ", attr(x$strata, 'levels'), "\n", sep = "")
   cat("Cluster var(s): ", x$cluster, "\n", sep = "")
@@ -594,20 +637,51 @@ plot.ritest = function(x, type = c('density', 'hist'),
   type = match.arg(type)
   highlight = match.arg(highlight)
   if (is.null(family)) family = 'HersheySans'
+
+  h0_value = as.numeric(gsub('.*=|<|>', '', x$h0))
+
+  beta_parm = x$beta_parm - h0_value
+  side = attr(x$pval, 'side')
+
+  ci_sides =
+    if (side=='<=') {
+      1
+    } else if (side=='>=') {
+      2
+    } else {
+      1:2
+    }
+
+  hi_lines = beta_parm * (c(-1, 1)[ci_sides])
+  if (beta_parm < 0) hi_lines = -hi_lines
+
+  xlim =
+    if (show_parm) {
+      # range(x$betas, x$beta_parm, x$ci_parm - abs(x$beta_parm), finite = TRUE)
+      range(x$betas, beta_parm, hi_lines, finite = TRUE)
+    } else {
+      range(x$betas, x$beta_parm, finite = TRUE)
+    }
+
   if (type=='density') {
     dens = density(x$betas)
     plot(dens,
          main = '', xlab = '',
-         xlim = range(x$betas, x$beta_parm),
+         xlim = xlim,
          family = family)
     if (highlight %in% c('both', 'fill')) {
-      x1 = 1
-      x2 = tail(which(dens$x <= -abs(x$beta_parm)), 1)
-      x3 = head(which(dens$x >= abs(x$beta_parm)), 1)
-      x4 = length(dens$x)
       fcol = rgb(1,0,0,0.5)
-      with(dens, polygon(x=c(x[c(x1,x1:x2,x2)]), y= c(0, y[x1:x2], 0), col=fcol, border = FALSE))
-      with(dens, polygon(x=c(x[c(x3,x3:x4,x4)]), y= c(0, y[x3:x4], 0), col=fcol, border = FALSE))
+      x1 = x2 = x3 = x4 = NA
+      if (1 %in% ci_sides) {
+        x1 = if (beta_parm < 0 && length(ci_sides)==1) length(dens$x) else 1
+        x2 = tail(which(dens$x <= -abs(beta_parm)), 1)
+        with(dens, polygon(x=c(x[c(x1,x1:x2,x2)]), y= c(0, y[x1:x2], 0), col=fcol, border = FALSE))
+      }
+      if (2 %in% ci_sides) {
+        x3 = head(which(dens$x >= abs(beta_parm)), 1)
+        x4 = length(dens$x)
+        with(dens, polygon(x=c(x[c(x3,x3:x4,x4)]), y= c(0, y[x3:x4], 0), col=fcol, border = FALSE))
+      }
     }
   } else {
     if (is.null(breaks)) {
@@ -619,7 +693,17 @@ plot.ritest = function(x, type = c('density', 'hist'),
 
     hist_df = hist(x$betas, breaks = breaks, plot = FALSE)
     if (highlight %in% c('both', 'fill')) {
-      hist_col = ifelse(abs(hist_df$breaks) > abs(x$beta_parm), rgb(1,0,0,0.5), rgb(0.2,0.2,0.2,0.2))
+      hist_cond =
+        if (side=='<=' && beta_parm >= 0) {
+          hist_df$breaks <= hi_lines#-abs(beta_parm)
+        } else if (side=='<=' && beta_parm < 0) {
+          hist_df$breaks >= hi_lines
+        } else if (side=='>=') {
+          hist_df$breaks >= hi_lines#abs(beta_parm)
+        } else {
+          abs(hist_df$breaks) >= abs(beta_parm)
+        }
+      hist_col = ifelse(hist_cond, rgb(1,0,0,0.5), rgb(0.2,0.2,0.2,0.2))
     } else {
       hist_col = rgb(0.2,0.2,0.2,0.2)
     }
@@ -627,25 +711,20 @@ plot.ritest = function(x, type = c('density', 'hist'),
          col = hist_col,
          border = FALSE,
          main = NULL, xlab = NULL,
-         xlim = range(x$betas, x$beta_parm),
+         xlim = xlim,
          family = family)
   }
-  title(main = paste('Randomization Inference:', x$resampvar),
-        sub = paste0('Simulated p-val: ',  sprintf('%.3g', x$pval),
-                     '. Parametric p-val: ', sprintf('%.3g', x$pval_parm),'.'),
+  title(main = paste('Randomization Inference:', x$h0),
+        sub = paste0('Simulated p-val: ',  sprintf('%.3f', x$pval),
+                     '. Parametric p-val: ', sprintf('%.3f', x$pval_parm),'.'),
         cex.sub = 0.75,
         xlab = 'Simulated values',
         family = family)
   if (highlight %in% c('both', 'lines')) {
-    abline(v = x$beta_parm, col = "red", lty = 1)
-    abline(v = -x$beta_parm, col = "red", lty = 1)
+    abline(v = hi_lines, col = "red", lty = 1)
   }
   if (show_parm) {
-    if (inherits(x$ci_parm, 'data.frame')) {
-      abline(v = sweep(x$ci_parm, 2, rowMeans(x$ci_parm)), lty = 2, col = 'red')
-    } else {
-      abline(v = x$ci_parm - mean(x$ci_parm), lty = 2, col = 'red')
-    }
+    abline(v = x$ci_parm - beta_parm, lty = 2, col = 'blue')
   }
 }
 

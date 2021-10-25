@@ -7,8 +7,8 @@
 ritest(
   object,
   resampvar,
+  h0 = NULL,
   reps = 100,
-  pvals = c("both", "left", "right"),
   strata = NULL,
   cluster = NULL,
   level = 0.95,
@@ -31,14 +31,18 @@ only `stats::lm` and `fixest::feols` models are supported.}
 that you want to conduct RI on. At present, only a single variable is
 permitted.}
 
+\item{h0}{Character. The sharp null hypothesis to be tested. In the most
+common case, you can safely omit this argument and the function will
+automatically implement a standard two-sided test (on `resampvar`) against
+a null value of zero. Otherwise, it should be an (in)equality sign followed
+by a number. Examples include '=0' (i.e the same two-sided test as the
+default), or '>=0' and '<=0 (i.e. the one-sided equivalents). Similarly,
+you may test against a value other than zero (e.g. '>=1'). However, note
+that multiple comparison tests (e.g. b1 - b2 = 0) are not yet supported.}
+
 \item{reps}{Integer. The number of repetitions (permutation draws) in the RI
 simulation. Default is 100, but you probably want more that that. Young
 (2019) finds that rejection rates stabilise at around 2,000 draws.}
-
-\item{pvals}{Character. How should the test values should be computed? The
-default is "both", which means that two-sided p-values will be computed.
-Alternatively, users can specify one-sided p-values with either "left" or
-"right".}
 
 \item{strata}{Character or one-sided formula. Permute `resampvar` within
 strata (AKA blocks)? See Details and Examples below.}

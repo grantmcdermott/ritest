@@ -35,4 +35,4 @@ Imports:
 Suggests: 
     tinytest,
     ggplot2
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
