@@ -50,13 +50,15 @@ The `ritest()` function supports a variety of arguments, but the basic syntax
 is
 
 ```r
-ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
+ritest(object, resampvar, h0=NULL, reps=100, strata=NULL, cluster=NULL, ...)
 ```
 
 where: 
 
 - `object` is a model object (e.g. a linear regression).
 - `resampvar` is the variable that you want to resample (i.e. permute).
+- `h0` is the sharp null hypothesis that you want to test (defaults to '=0',
+i.e. a standard two-sided test of `resampvar` against a null value of zero.)
 - `reps` is the number of simulations (i.e. permutations).
 - `strata` is a variable defining the stratification (aka "blocking") of the 
 experimental design, if any.
@@ -213,8 +215,8 @@ the same results across two different languages. But the important thing to note
 is that they are functionally equivalent (rejection probability of 0.106 vs
 0.104).
 
-One nice feature of this implementation is that it should complete very quickly. 
-This time, the 5,000 simulations only take around **6 seconds**.
+One nice feature of this R implementation is that it should complete very 
+quickly. This time, the 5,000 simulations only take around **6 seconds**.
 
 ```{r toc}
 toc

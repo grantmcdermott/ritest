@@ -40,7 +40,7 @@ The `ritest()` function supports a variety of arguments, but the basic
 syntax is
 
 ``` r
-ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
+ritest(object, resampvar, h0=NULL, reps=100, strata=NULL, cluster=NULL, ...)
 ```
 
 where:
@@ -48,6 +48,9 @@ where:
 -   `object` is a model object (e.g. a linear regression).
 -   `resampvar` is the variable that you want to resample
     (i.e. permute).
+-   `h0` is the sharp null hypothesis that you want to test (defaults to
+    ‘=0’, i.e. a standard two-sided test of `resampvar` against a null
+    value of zero.)
 -   `reps` is the number of simulations (i.e. permutations).
 -   `strata` is a variable defining the stratification (aka “blocking”)
     of the experimental design, if any.
@@ -88,7 +91,6 @@ est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 #> * ORIGINAL MODEL *
 #> ******************
 #> 
-#> 
 #> Call:
 #> lm(formula = yield ~ N + P + K, data = npk)
 #> 
@@ -116,6 +118,7 @@ est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 #> 
 #> Call: lm(formula = yield ~ N + P + K, data = npk)
 #> Res. var(s): N1
+#> H0: N1 = 0
 #> Strata var(s): 
 #> Strata: 
 #> Cluster var(s): 
@@ -162,6 +165,7 @@ feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
 #> 
 #> Call: feols(fml = yield ~ N + P + K | block, data = npk, vcov = 'iid')
 #> Res. var(s): N1
+#> H0: N1 = 0
 #> Strata var(s): block
 #> Strata: 6
 #> Cluster var(s): 
@@ -255,7 +259,6 @@ co_est =
     vcov = ~b_block, data = co
     )
 #> NOTE: 1,020 observations removed because of NA values (LHS: 1,020).
-
 tic = Sys.time()
 co_ri = ritest(co_est, ~b_treat, cluster=~b_block, strata=~b_pair, reps=5e3, seed=546L)
 toc = Sys.time() - tic
@@ -265,6 +268,7 @@ co_ri
 #> 
 #> Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, data = co, vcov = ~b_block)
 #> Res. var(s): b_treat
+#> H0: b_treat = 0
 #> Strata var(s): b_pair
 #> Strata: 31
 #> Cluster var(s): b_block
@@ -283,13 +287,13 @@ exactly the same results across two different languages. But the
 important thing to note is that they are functionally equivalent
 (rejection probability of 0.106 vs 0.104).
 
-One nice feature of this implementation is that it should complete very
-quickly. This time, the 5,000 simulations only take around **6
+One nice feature of this R implementation is that it should complete
+very quickly. This time, the 5,000 simulations only take around **6
 seconds**.
 
 ``` r
 toc
-#> Time difference of 6.362944 secs
+#> Time difference of 6.698386 secs
 ```
 
 Again, we can plot the results. Here’s a slight variation, where we plot
