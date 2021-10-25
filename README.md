@@ -8,14 +8,17 @@
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
 <!-- badges: end -->
 
-An experimental R port of the
-**[`ritest`](https://github.com/simonheb)** Stata routine for
-randomization inference (RI) by [Simon
-Heß](https://github.com/simonheb).
-
+An experimental R port of the [`ritest`](https://github.com/simonheb)
+Stata routine (by [Simon Heß](https://github.com/simonheb)) for
+conducting [**randomization
+inference**](https://dimewiki.worldbank.org/Randomization_Inference).
 Fast and user-friendly. Currently limited to `lm()` and
 `fixest::feols()` models, but aims to support a variety of model classes
 once it is fully baked.
+
+[`Installation`](#Installation) \| [`Examples`](#Examples)
+([`i`](#toy-data), [`ii`](#real-life-data)) \|
+[`Benchmarks`](#Benchmarks)
 
 ## Installation
 
@@ -27,13 +30,16 @@ remotes::install_github("grantmcdermott/ritest")
 ## Examples
 
 Let’s start by loading the **ritest** package. I’ll also load the
-**fixest** and **haven** packages to help demonstrate some additional
-functionality in the examples that follow.
+**fixest**, **modelsummary**, and **haven** packages to help demonstrate
+some additional functionality in the examples that follow.
 
 ``` r
-library(ritest)
-library(fixest) ## Note: ritest requires fixest version >= 0.10.0
-library(haven)  ## For reading .dta files
+library(ritest)       ## This package
+
+# Extras...
+library(fixest)       ## For fast (high-dimensional) fixed-effect regressions
+library(modelsummary) ## For nice regression tables 
+library(haven)        ## For reading .dta files
 ```
 
 The `ritest()` function supports a variety of arguments, but the basic
@@ -147,6 +153,32 @@ plot(est_ri, show_parm = TRUE)
 ```
 
 <img src="man/figures/README-plot_est_ri-1.png" width="100%" />
+
+Similarly, support for regression tables is enabled via `ritest`’s
+compatability with `modelsummary::msummary`. I recommend displaying
+p-values instead of the default standard errors. This is particularly
+important when comparing against a parametric model as I do below.
+
+``` r
+# library(modelsummary)  ## Already loaded
+
+msummary(list(lm = est, ritest = est_ri), 
+         statistic = 'p.value', 
+         ## These next arguments just make our table look nicer for this README
+         coef_map = c('N1' = 'Nitrogen'), 
+         gof_omit = 'Obs|R2|IC|Log|F',
+         output = 'markdown',
+         notes = 'p-values shown in parentheses.')
+```
+
+|          |   lm    |  ritest  |
+|:---------|:-------:|:--------:|
+| Nitrogen |  5.617  |  5.617   |
+|          | (0.019) | (0.021)  |
+| H0       |         |  N1 = 0  |
+| Num.Reps |         | 1000.000 |
+
+**Note:** ^^ p-values shown in parentheses.
 
 A more realistic implementation would control for the stratified (aka
 “blocked”) experimental design. We’ll specify these strata (blocks) as
