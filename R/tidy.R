@@ -12,9 +12,6 @@ generics::glance
 #' @param x An object produced by the `ritest` function.
 #' @param conf.int Logical indicating whether or not to include a confidence
 #'   interval.
-#' @param conf.level The confidence level to use for the confidence interval if
-#'   `conf.int=TRUE`. Must be strictly greater than 0 and less than 1. Defaults
-#'   to 0.95, which corresponds to a 95 percent confidence interval.
 #' @inheritParams ritest
 #' @return A "tidy" `data.frame` of summary statistics that conforms to the
 #'   `broom` package specification.
@@ -26,13 +23,12 @@ generics::glance
 #' glance(est_ri)
 tidy.ritest <- function(x,
                         conf.int = TRUE,
-                        conf.level = 0.95,
                         ...) {
 
   ret = data.frame(term = x$resampvar,
                    estimate = x$beta_parm,
                    std.error = x$se,
-                   p.value = x$pval)
+                   p.value = as.numeric(x$pval))
 
   # confidence intervals
   if (conf.int) {
