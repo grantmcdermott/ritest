@@ -34,7 +34,16 @@ expect_equal(co_ri$count, 102)
 # Test SE
 expect_equal(co_ri$se, 0.01575008)
 
-# Test count (no stacking)
-expect_equal(co_ri_nostack$count, 119)
-# Test SE (no stacking)
-expect_equal(co_ri_nostack$se, 0.01685023, tolerance = 1e-6)
+## Results of the no-stacking case are platform (actually: ptype) dependent
+if (.Platform$OS.type != "windows") {
+  # Test count
+  expect_equal(co_ri_nostack$count, 119)
+  # Test SE
+  expect_equal(co_ri_nostack$se, 0.01685023, tolerance = 1e-6)
+}
+if (.Platform$OS.type == "windows") {
+  # Test count
+  expect_equal(co_ri_nostack$count, 99)
+  # Test SE
+  expect_equal(co_ri_nostack$se, 0.01554263, tolerance = 1e-6)
+}
