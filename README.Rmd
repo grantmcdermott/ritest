@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
+[![Codecov test coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/master/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=master)
 <!-- badges: end -->
 
 An experimental R port of the [`-ritest-`](https://github.com/simonheb) Stata 
