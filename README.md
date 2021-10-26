@@ -8,7 +8,7 @@
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
 <!-- badges: end -->
 
-An experimental R port of the [`ritest`](https://github.com/simonheb)
+An experimental R port of the [`-ritest-`](https://github.com/simonheb)
 Stata routine (by [Simon Heß](https://github.com/simonheb)) for
 conducting [**randomization
 inference**](https://dimewiki.worldbank.org/Randomization_Inference).
@@ -17,7 +17,7 @@ Fast and user-friendly. Currently limited to `lm()` and
 once it is fully baked.
 
 [`Installation`](#Installation) \| [`Examples`](#Examples)
-([`i`](#toy-data), [`ii`](#real-life-data)) \|
+([`toy data`](#toy-data), [`real-life data`](#real-life-data)) \|
 [`Benchmarks`](#Benchmarks)
 
 ## Installation
@@ -30,16 +30,15 @@ remotes::install_github("grantmcdermott/ritest")
 ## Examples
 
 Let’s start by loading the **ritest** package. I’ll also load the
-**fixest**, **modelsummary**, and **haven** packages to help demonstrate
-some additional functionality in the examples that follow.
+**fixest** and **modelsummary** packages to help demonstrate some
+additional functionality in the examples that follow.
 
 ``` r
 library(ritest)       ## This package
 
 # Extras...
 library(fixest)       ## For fast (high-dimensional) fixed-effect regressions
-library(modelsummary) ## For nice regression tables 
-library(haven)        ## For reading .dta files
+library(modelsummary) ## For nice regression tables
 ```
 
 The `ritest()` function supports a variety of arguments, but the basic
@@ -154,10 +153,10 @@ plot(est_ri, show_parm = TRUE)
 
 <img src="man/figures/README-plot_est_ri-1.png" width="100%" />
 
-Similarly, support for regression tables is enabled via `ritest`’s
-compatability with `modelsummary::msummary`. I recommend displaying
+Similarly, support for regression tables is enabled via **ritest’s**
+compatability with `modelsummary::msummary()`. I recommend displaying
 p-values instead of the default standard errors. This is particularly
-important when comparing against a parametric model as I do below.
+important when comparing against a parametric model, as I do below.
 
 ``` r
 # library(modelsummary)  ## Already loaded
@@ -216,13 +215,15 @@ the parametric p-value (0.004) from the regression model.
 
 ### Real-life data
 
-Next, we’ll replicate an example in David McKenzie’s nice [blog
+Next, we’ll replicate an example from David McKenzie’s nice [blog
 post](https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata)
-about the Stata `ritest` routine. The dataset in question derives from a
-randomized control trial about supply chains in Colombia. You can
-download the data from David’s website
-[here](https://drive.google.com/open?id=0B9C9RwWKZrUNazdyVXFkSTlTNGc)
-(also includes code and data for some other examples.)
+about the Stata `-ritest-` routine. The dataset in question derives from
+a randomized control trial about supply chains in Colombia. You can
+download the original .dta file from David’s website
+[here](https://drive.google.com/open?id=0B9C9RwWKZrUNazdyVXFkSTlTNGc).
+Alternatively, this implementation bundles the dataset as part of the R
+package (see: `?colombia`). So you can also access and export it easily
+that way too.
 
 #### Stata implementation
 
@@ -237,7 +238,9 @@ experiment.
 highlight the main command and result.)
 
 ``` stata
-. use "~/clusterColombia.dta", clear
+. // This next line assumes you have exported the `colombia` dataset from R as a
+. // CSV for Stata to read, e.g. `write.csv(colombia, '~/colombia.csv', row.names = FALSE)`
+. insheet using "~/colombia.csv", comma clear
 
 . 
 . timer on 1
@@ -283,12 +286,12 @@ Like David, this takes around **3 minutes** to run on my laptop.
 Now, the R equivalent with this package.
 
 ``` r
-co = haven::read_dta('~/clusterColombia.dta')
+data("colombia")
 
 co_est = 
   feols(
     dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, 
-    vcov = ~b_block, data = co
+    vcov = ~b_block, data = colombia
     )
 #> NOTE: 1,020 observations removed because of NA values (LHS: 1,020).
 tic = Sys.time()
@@ -298,7 +301,7 @@ toc = Sys.time() - tic
 ## Print the results
 co_ri
 #> 
-#> Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, data = co, vcov = ~b_block)
+#> Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, data = colombia, vcov = ~b_block)
 #> Res. var(s): b_treat
 #> H0: b_treat = 0
 #> Strata var(s): b_pair
@@ -325,7 +328,7 @@ seconds**.
 
 ``` r
 toc
-#> Time difference of 6.698386 secs
+#> Time difference of 6.744791 secs
 ```
 
 Again, we can plot the results. Here’s a slight variation, where we plot
