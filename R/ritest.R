@@ -120,10 +120,7 @@
 #' @seealso [print.ritest()], [plot.ritest()]
 #' @import data.table
 #' @importFrom pbapply pbsapply
-#' @importFrom grDevices rgb
-#' @importFrom graphics abline hist title
-#' @importFrom stats .lm.fit coefficients complete.cases confint density
-#'   model.matrix qnorm sd
+#' @importFrom stats .lm.fit coefficients complete.cases confint model.matrix qnorm sd
 #' @importFrom utils capture.output head tail
 #' @export
 #' @examples
@@ -628,6 +625,9 @@ print.ritest = function(x, verbose = FALSE, ...) {
 #' @param family Character. The font family. Defaults to 'HersheySans' instead
 #'   of R's normal Arial plotting font.
 #' @param ... Other plot arguments. Currently ignored.
+#' @importFrom grDevices rgb
+#' @importFrom graphics abline hist title
+#' @importFrom stats density
 #' @inherit ritest examples
 #' @export
 plot.ritest = function(x, type = c('density', 'hist'),
