@@ -141,14 +141,13 @@ In this simple case, our parametric results appear to hold up very well.
 The original p-value of 0.019 is very close to the equivalent rejection
 rate of 0.021 that we get with our RI procedure.
 
-We can also visualize this result using the default `plot` method. The
+We can also visualize this result using the dedicated `plot` method. The
 function takes several arguments for added customization. But here I’ll
-just show how to add the parametric 95 percent confidence interval
-(i.e. from the original linear regression) in addition the simulated
-rejection regions.
+just show the default plot, which includes vertical lines that denote
+the simulated (in this case: 95 percent) rejection regions.
 
 ``` r
-plot(est_ri, show_parm = TRUE)
+plot(est_ri)
 ```
 
 <img src="man/figures/README-plot_est_ri-1.png" width="100%" />
@@ -294,6 +293,7 @@ co_est =
     vcov = ~b_block, data = colombia
     )
 #> NOTE: 1,020 observations removed because of NA values (LHS: 1,020).
+
 tic = Sys.time()
 co_ri = ritest(co_est, ~b_treat, cluster=~b_block, strata=~b_pair, reps=5e3, seed=546L)
 toc = Sys.time() - tic
@@ -328,7 +328,7 @@ seconds**.
 
 ``` r
 toc
-#> Time difference of 6.744791 secs
+#> Time difference of 6.652264 secs
 ```
 
 Again, we can plot the results. Here’s a slight variation, where we plot
