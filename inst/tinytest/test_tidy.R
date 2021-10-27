@@ -39,14 +39,13 @@ if (.Platform$OS.type == "windows") {
   tidy_ri_90_known = data.frame(
     term = 'N1',
     estimate = 5.616667,
-    std.error = 0.005813723,
-    p.value = 0.021,
-    conf.low = 0.01354941,
-    conf.high = 0.02845059
+    std.error = 0.006916714,
+    p.value = 0.03,
+    conf.low = 0.02113587,
+    conf.high = 0.03886413
   )
 }
 
 expect_equal(tidy_ri, tidy_ri_known, tolerance = 1e-6)
 
 expect_equal(tidy_ri_90, tidy_ri_90_known, tolerance = 1e-6)
-
