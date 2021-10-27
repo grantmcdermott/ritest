@@ -182,8 +182,6 @@
 #'
 ritest = function(object,
                   resampvar,
-                  # h0 = NULL,
-                  # alternative = c("two.sided", "less", "greater", "both",  "left", "right"),
                   reps = 100,
                   strata = NULL,
                   cluster = NULL,
@@ -281,7 +279,6 @@ ritest = function(object,
            'the `ritest` function with the `verbose = TRUE` argument.')
       }
   }
-  # h0_string = paste(resampvar, h0_symbol, h0_value)
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
   Xtreat = Xmat[,resampvar_pos]
 
@@ -529,8 +526,6 @@ ritest = function(object,
   count = sum(probs)
   pval = count/reps
   attr(pval, 'side') = h0_symbol
-  # se = sd(probs)/sqrt(reps)
-  # ci = quantile(probs, abs(c(0, 1) - alpha))
   se = qnorm(level) * sd(probs) / sqrt(reps)
   ci = qnorm(level) * se
   ci = pval + c(-ci, ci)[ci_sides]
