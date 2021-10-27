@@ -7,7 +7,6 @@
 ritest(
   object,
   resampvar,
-  h0 = NULL,
   reps = 100,
   strata = NULL,
   cluster = NULL,
@@ -28,17 +27,16 @@ ritest(
 only `stats::lm` and `fixest::feols` models are supported.}
 
 \item{resampvar}{Character or one-sided formula. The variable (coefficient)
-that you want to conduct RI on. At present, only a single variable is
-permitted.}
-
-\item{h0}{Character. The sharp null hypothesis to be tested. In the most
-common case, you can safely omit this argument and the function will
-automatically implement a standard two-sided test (on `resampvar`) against
-a null value of zero. Otherwise, it should be an (in)equality sign followed
-by a number. Examples include '=0' (i.e the same two-sided test as the
-default), or '>=0' and '<=0 (i.e. the one-sided equivalents). Similarly,
-you may test against a value other than zero (e.g. '>=1'). However, note
-that multiple comparison tests (e.g. b1 - b2 = 0) are not yet supported.}
+that you want to test.
+By default, the RI procedure will conduct a standard two-sided test against
+a sharp null hypothesis of zero (i.e. H0: resampvar = 0). Other null
+hypotheses may be specified as part of a character string. These must
+take the form of the resampled variable, followed by an (in)equality sign,
+and then a number. For example 'x>=0' or 'x<=0' would yield respective
+one-sided tests against the zero null. Similarly, you can test against
+values other than zero (e.g. 'x=1' or x>=1). However, note that multiple
+multiple comparison tests (e.g. 'x1-x2=0') are not yet supported. See
+Examples.}
 
 \item{reps}{Integer. The number of repetitions (permutation draws) in the RI
 simulation. Default is 100, but you probably want more that that. Young
@@ -101,7 +99,7 @@ An list object of class `ritest`. Default print and plotting methods
 }
 \description{
 Perform randomization inference (RI) testing on a model object, e.g. a
-  coefficient from a linear regression model. It tries to mimic the `ritest`
+  coefficient from a linear regression model. It tries to mimic the `-ritest-`
   Stata routine (Heß, 2017) in its design and functionality. The package is
   quite experimental and only a subset of this functionality is currently
   supported. However, it does appear to be significantly faster.
@@ -154,7 +152,7 @@ The use of parallelism in computation introduces some well-known
   circumstances.
 }
 \examples{
-# Naive example using the inbuilt nkp dataset. See ?npk.
+# Naive example using the base nkp dataset. See ?npk.
 
 est = lm(yield ~ N + P + K, data = npk)
 
@@ -173,6 +171,14 @@ est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 plot(est_ri)
 plot(est_ri, type = 'hist')
 # etc
+
+# The default, ritest() conducts a standard two-sided test against a sharp
+# null hypothesis of zero. You can can specify other null hypotheses as
+# part of the 'resampvar' string argument. For example, a (left) one-sided
+# test.
+plot(ritest(est, 'N<=0', reps = 1e3, seed = 1234L, pcores = 2L))
+# Or, null values different from zero.
+plot(ritest(est, 'N=2', reps = 1e3, seed = 1234L, pcores = 2L))
 
 # More realistic example where we control for the stratified (aka "blocked")
 # experimental design. We'll specify these strata (blocks) as fixed-effects

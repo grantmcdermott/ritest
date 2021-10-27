@@ -47,17 +47,15 @@ The `ritest()` function supports a variety of arguments, but the basic
 syntax is
 
 ``` r
-ritest(object, resampvar, h0=NULL, reps=100, strata=NULL, cluster=NULL, ...)
+ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
 ```
 
 where:
 
 -   `object` is a model object (e.g. a linear regression).
 -   `resampvar` is the variable that you want to resample
-    (i.e. permute).
--   `h0` is the sharp null hypothesis that you want to test (defaults to
-    ‘=0’, i.e. a standard two-sided test of `resampvar` against a null
-    value of zero.)
+    (i.e. permute). You can also specify the sharp null hypothesis that
+    you want to test as part of a character string.
 -   `reps` is the number of simulations (i.e. permutations).
 -   `strata` is a variable defining the stratification (aka “blocking”)
     of the experimental design, if any.
@@ -69,8 +67,7 @@ where:
 
 ### Toy data
 
-Our first example will be a rather naive implementation using the
-inbuilt
+Our first example will be a rather naive implementation using the base
 [`nkp`](https://vincentarelbundock.github.io/Rdatasets/doc/MASS/npk.html)
 dataset.
 
@@ -154,10 +151,21 @@ plot(est_ri)
 
 <img src="man/figures/README-plot_est_ri-1.png" width="100%" />
 
-Similarly, support for regression tables is enabled via **ritest’s**
-compatability with `modelsummary::msummary()`. I recommend displaying
-p-values instead of the default standard errors. This is particularly
-important when comparing against a parametric model, as I do below.
+As an aside, note that the RI procedure tests against a standard
+two-sided null hypothesis of zero. (In the above case: `H0: N1=0`.) We
+can specify a different null hypothesis as part of the `resampvar`
+string. For example:
+
+``` r
+plot(ritest(est, 'N<=2', reps = 1e3, seed = 1234L, pcores = 2L))
+```
+
+<img src="man/figures/README-plot_est_ri_alt_ho-1.png" width="100%" />
+
+Support for regression tables is enabled via **ritest’s** compatability
+with `modelsummary::msummary()`. I recommend displaying p-values instead
+of the default standard errors. This is particularly important when
+comparing against a parametric model, as I do below.
 
 ``` r
 # library(modelsummary)  ## Already loaded
@@ -180,10 +188,11 @@ msummary(list(lm = est, ritest = est_ri),
 
 **Note:** ^^ p-values shown in parentheses.
 
-A more realistic implementation would control for the stratified (aka
-“blocked”) experimental design. We’ll specify these strata (blocks) as
-fixed-effects in our regression model. I’ll also use this as an
-opportunity to show that that the package is fully compatible with
+As final illustration using our toy data, we’ll test a more realistic
+model that controls for the stratified (aka “blocked”) design of the
+original `npk` experiment. We’ll do this by specifying these strata
+(blocks) as fixed-effects in our regression model. I’ll also use this as
+an opportunity to show that that the package is fully compatible with
 piping workflows. This might be useful if you don’t feel like saving
 intermediate objects. Here I’ll use the new base R pipe (`|>`) that was
 introduced in R 4.1.1, but the same thing would be possible with the

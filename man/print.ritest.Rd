@@ -19,7 +19,7 @@ Printed display of ritest objects. Tries to mimic the display
   of the equivalent Stata routine.
 }
 \examples{
-# Naive example using the inbuilt nkp dataset. See ?npk.
+# Naive example using the base nkp dataset. See ?npk.
 
 est = lm(yield ~ N + P + K, data = npk)
 
@@ -38,6 +38,14 @@ est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 plot(est_ri)
 plot(est_ri, type = 'hist')
 # etc
+
+# The default, ritest() conducts a standard two-sided test against a sharp
+# null hypothesis of zero. You can can specify other null hypotheses as
+# part of the 'resampvar' string argument. For example, a (left) one-sided
+# test.
+plot(ritest(est, 'N<=0', reps = 1e3, seed = 1234L, pcores = 2L))
+# Or, null values different from zero.
+plot(ritest(est, 'N=2', reps = 1e3, seed = 1234L, pcores = 2L))
 
 # More realistic example where we control for the stratified (aka "blocked")
 # experimental design. We'll specify these strata (blocks) as fixed-effects

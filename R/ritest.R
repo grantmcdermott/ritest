@@ -2,7 +2,7 @@
 #' @aliases ritest
 #'
 #' @description Perform randomization inference (RI) testing on a model object, e.g. a
-#'   coefficient from a linear regression model. It tries to mimic the `ritest`
+#'   coefficient from a linear regression model. It tries to mimic the `-ritest-`
 #'   Stata routine (Heß, 2017) in its design and functionality. The package is
 #'   quite experimental and only a subset of this functionality is currently
 #'   supported. However, it does appear to be significantly faster.
@@ -10,16 +10,16 @@
 #' @param object Model object containing the `resampvar` variable. At present,
 #'   only `stats::lm` and `fixest::feols` models are supported.
 #' @param resampvar Character or one-sided formula. The variable (coefficient)
-#'   that you want to conduct RI on. At present, only a single variable is
-#'   permitted.
-#' @param h0 Character. The sharp null hypothesis to be tested. In the most
-#'   common case, you can safely omit this argument and the function will
-#'   automatically implement a standard two-sided test (on `resampvar`) against
-#'   a null value of zero. Otherwise, it should be an (in)equality sign followed
-#'   by a number. Examples include '=0' (i.e the same two-sided test as the
-#'   default), or '>=0' and '<=0 (i.e. the one-sided equivalents). Similarly,
-#'   you may test against a value other than zero (e.g. '>=1'). However, note
-#'   that multiple comparison tests (e.g. b1 - b2 = 0) are not yet supported.
+#'   that you want to test.
+#'   By default, the RI procedure will conduct a standard two-sided test against
+#'   a sharp null hypothesis of zero (i.e. H0: resampvar = 0). Other null
+#'   hypotheses may be specified as part of a character string. These must
+#'   take the form of the resampled variable, followed by an (in)equality sign,
+#'   and then a number. For example 'x>=0' or 'x<=0' would yield respective
+#'   one-sided tests against the zero null. Similarly, you can test against
+#'   values other than zero (e.g. 'x=1' or x>=1). However, note that multiple
+#'   multiple comparison tests (e.g. 'x1-x2=0') are not yet supported. See
+#'   Examples.
 #' @param reps Integer. The number of repetitions (permutation draws) in the RI
 #'   simulation. Default is 100, but you probably want more that that. Young
 #'   (2019) finds that rejection rates stabilise at around 2,000 draws.
@@ -124,7 +124,7 @@
 #' @importFrom utils capture.output head tail
 #' @export
 #' @examples
-#' # Naive example using the inbuilt nkp dataset. See ?npk.
+#' # Naive example using the base nkp dataset. See ?npk.
 #'
 #' est = lm(yield ~ N + P + K, data = npk)
 #'
@@ -143,6 +143,14 @@
 #' plot(est_ri)
 #' plot(est_ri, type = 'hist')
 #' # etc
+#'
+#' # The default, ritest() conducts a standard two-sided test against a sharp
+#' # null hypothesis of zero. You can can specify other null hypotheses as
+#' # part of the 'resampvar' string argument. For example, a (left) one-sided
+#' # test.
+#' plot(ritest(est, 'N<=0', reps = 1e3, seed = 1234L, pcores = 2L))
+#' # Or, null values different from zero.
+#' plot(ritest(est, 'N=2', reps = 1e3, seed = 1234L, pcores = 2L))
 #'
 #' # More realistic example where we control for the stratified (aka "blocked")
 #' # experimental design. We'll specify these strata (blocks) as fixed-effects
@@ -174,7 +182,7 @@
 #'
 ritest = function(object,
                   resampvar,
-                  h0 = NULL,
+                  # h0 = NULL,
                   # alternative = c("two.sided", "less", "greater", "both",  "left", "right"),
                   reps = 100,
                   strata = NULL,
@@ -205,21 +213,21 @@ ritest = function(object,
   }
 
   if (inherits(resampvar, "formula")) {
-    resampvar = strsplit(paste0(resampvar)[2], split = ' \\+ ')[[1]]
-  }
-
-  # alternative = match.arg(alternative)
-  # alternative_alias = c('two.sided'='both', 'less'='left', 'greater'='right')
-  # if (alternative %in% alternative_alias) alternative = names(alternative_alias)[match(alternative, alternative_alias)]
-  # h0_symbol = c('two.sided'='=', 'less'='>=', 'greater'='<=') ## See ?multcomp::glht
-  if (is.null(h0)) {
-    h0_value = 0L
+    resampvar = paste0(resampvar)[2]
     h0_symbol = '='
+    h0_value = 0L
   } else {
-    h0 = gsub('[[:space:]]', '', h0)
-    h0_value = as.numeric(gsub('.*=|<|>', '', h0))
-    h0_symbol = gsub(h0_value, '', h0)
-    if (!grepl('=$', h0_symbol)) h0_symbol = paste0(h0_symbol, '=')
+    resampvar = gsub('[[:space:]]', '', resampvar)
+    h0 = resampvar
+    resampvar = gsub('=.*|>.*|<.*', '', resampvar)
+    if (resampvar==h0) {
+      h0_symbol = '='
+      h0_value = 0L
+    } else {
+      h0_value = as.numeric(gsub('.*=|.*>|.*<', '', gsub(resampvar, '', h0)))
+      h0_symbol = sub(h0_value, '', gsub(resampvar, '', h0, fixed = TRUE))
+      if (!grepl('=$', h0_symbol)) h0_symbol = paste0(h0_symbol, '=')
+    }
   }
 
   if(!is.null(seed)) {
@@ -273,7 +281,7 @@ ritest = function(object,
            'the `ritest` function with the `verbose = TRUE` argument.')
       }
   }
-  h0_string = paste(resampvar, h0_symbol, h0_value)
+  # h0_string = paste(resampvar, h0_symbol, h0_value)
   onames = setdiff(Xnames, resampvar) ## other (non-treatment vars)
   Xtreat = Xmat[,resampvar_pos]
 
@@ -473,6 +481,7 @@ ritest = function(object,
   betas = pbapply::pbsapply(1:reps, ri_sims, cl = cl)
 
   ## Parametric values
+  h0 = paste0(resampvar, h0_symbol, h0_value)
   ci_sides = 1:2
   if (h0_value==0 && h0_symbol=='=') {
     if (fixest_obj) {
@@ -491,11 +500,11 @@ ritest = function(object,
         ## unrecognised complete = FALSE argument (passed via ...)
         ## 2) Need manual DoF override to get right SEs / CIs.
         summary(suppressWarnings(
-          multcomp::glht(object, h0_string,
+          multcomp::glht(object, h0,
                          df=fixest::degrees_freedom(object, type = 'resid'), ...)
           ))
         } else {
-          summary(multcomp::glht(object, h0_string, ...))
+          summary(multcomp::glht(object, h0, ...))
         }
     coeftab = data.frame(glht_summ$test[c("coefficients", "sigma", "tstat", "pvalues")])
     ci_parm = confint(glht_summ)$confint[, c('lwr', 'upr')[ci_sides]]
@@ -530,7 +539,7 @@ ritest = function(object,
 
   out = list(call = call_string,
              resampvar = resampvar,
-             h0 = h0_string,
+             h0 = h0,
              reps = reps,
              strata = strata,
              cluster = cluster,
