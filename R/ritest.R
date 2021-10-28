@@ -596,18 +596,22 @@ print.ritest = function(x, verbose = FALSE, ...) {
   }
 
 
-  cat("\nCall: ", x$call, "\n", sep = "")
-  cat("Res. var(s): ", x$resampvar, "\n", sep = "")
-  cat("H0: ", x$h0, "\n", sep = "")
-  cat("Strata var(s): ", x$strata, "\n", sep = "")
-  cat("Strata: ", attr(x$strata, 'levels'), "\n", sep = "")
-  cat("Cluster var(s): ", x$cluster, "\n", sep = "")
-  cat("Clusters: ", attr(x$cluster, 'levels'), "\n", sep = "")
-  cat("Num. reps: ", x$reps, "\n", sep = "")
-  cat("---", "\n")
+  cat(cli::style_bold("\n          Call: "), x$call, "\n", sep = "")
+  cat(cli::style_bold("   Res. var(s): "), x$resampvar, "\n", sep = "")
+  cat(cli::style_bold("            H0: "), x$h0, "\n", sep = "")
+  if (!is.null(x$strata)) {
+    cat(cli::style_bold(" Strata var(s): "), x$strata, "\n", sep = "")
+    cat(cli::style_bold("        Strata: "), attr(x$strata, 'levels'), "\n", sep = "")
+  }
+  if (!is.null(x$cluster)) {
+    cat(cli::style_bold("Cluster var(s): "), x$cluster, "\n", sep = "")
+    cat(cli::style_bold("      Clusters: "), attr(x$cluster, 'levels'), "\n", sep = "")
+  }
+  cat(cli::style_bold("     Num. reps: "), x$reps, "\n", sep = "")
+  cat(cli::rule(), "\n")
   print(ri_mat, quote = FALSE, print.gap = 2L)
-  cat("---", "\n")
-  cat("Note: Confidence interval is with respect to p=c/n", "\n")
+  cat(cli::rule(), "\n")
+  cat("Note: Confidence interval is with respect to p=c/n.", "\n")
   cat(pval_string, "\n")
   cat("\n")
   # invisible(x)

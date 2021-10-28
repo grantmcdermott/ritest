@@ -32,7 +32,8 @@ Imports:
     pbapply,
     fixest (>= 0.10.0),
     multcomp,
-    generics
+    generics,
+    cli
 Suggests: 
     tinytest,
     ggplot2,

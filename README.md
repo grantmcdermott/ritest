@@ -120,19 +120,15 @@ est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 #> * RITEST RESULTS *
 #> ******************
 #> 
-#> Call: lm(formula = yield ~ N + P + K, data = npk)
-#> Res. var(s): N1
-#> H0: N1 = 0
-#> Strata var(s): 
-#> Strata: 
-#> Cluster var(s): 
-#> Clusters: 
-#> Num. reps: 1000
-#> --- 
+#>           Call: lm(formula = yield ~ N + P + K, data = npk)
+#>    Res. var(s): N1
+#>             H0: N1=0
+#>      Num. reps: 1000
+#> ──────────────────────────────────────────────────────────────────────────────── 
 #>   T(obs)         c         n     p=c/n     SE(p)   CI 2.5%  CI 97.5%  
 #>    5.617        21      1000     0.021  0.007462  0.008726   0.03327  
-#> --- 
-#> Note: Confidence interval is with respect to p=c/n 
+#> ──────────────────────────────────────────────────────────────────────────────── 
+#> Note: Confidence interval is with respect to p=c/n. 
 #> Note: c = #{|T| >= |T(obs)|}
 ```
 
@@ -183,7 +179,7 @@ msummary(list(lm = est, ritest = est_ri),
 |:---------|:-------:|:--------:|
 | Nitrogen |  5.617  |  5.617   |
 |          | (0.019) | (0.021)  |
-| H0       |         |  N1 = 0  |
+| H0       |         |   N1=0   |
 | Num.Reps |         | 1000.000 |
 
 **Note:** ^^ p-values shown in parentheses.
@@ -195,8 +191,7 @@ original `npk` experiment. We’ll do this by specifying these strata
 an opportunity to show that that the package is fully compatible with
 piping workflows. This might be useful if you don’t feel like saving
 intermediate objects. Here I’ll use the new base R pipe (`|>`) that was
-introduced in R 4.1.1, but the same thing would be possible with the
-popular magrittr pipe (`%>%`).
+introduced in R 4.1.1.
 
 ``` r
 # library(fixest) ## Already loaded
@@ -204,19 +199,17 @@ popular magrittr pipe (`%>%`).
 feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
   ritest('N', strata = 'block', reps = 1e3, seed = 99L)
 #> 
-#> Call: feols(fml = yield ~ N + P + K | block, data = npk, vcov = 'iid')
-#> Res. var(s): N1
-#> H0: N1 = 0
-#> Strata var(s): block
-#> Strata: 6
-#> Cluster var(s): 
-#> Clusters: 
-#> Num. reps: 1000
-#> --- 
+#>           Call: feols(fml = yield ~ N + P + K | block, data = npk, vcov = 'iid')
+#>    Res. var(s): N1
+#>             H0: N1=0
+#>  Strata var(s): block
+#>         Strata: 6
+#>      Num. reps: 1000
+#> ──────────────────────────────────────────────────────────────────────────────── 
 #>    T(obs)          c          n      p=c/n      SE(p)    CI 2.5%   CI 97.5%  
 #>     5.617          3       1000      0.003   0.002846  -0.001681   0.007681  
-#> --- 
-#> Note: Confidence interval is with respect to p=c/n 
+#> ──────────────────────────────────────────────────────────────────────────────── 
+#> Note: Confidence interval is with respect to p=c/n. 
 #> Note: c = #{|T| >= |T(obs)|}
 ```
 
@@ -312,19 +305,19 @@ toc = Sys.time() - tic
 ## Print the results
 co_ri
 #> 
-#> Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, data = colombia, vcov = ~b_block)
-#> Res. var(s): b_treat
-#> H0: b_treat = 0
-#> Strata var(s): b_pair
-#> Strata: 31
+#>           Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab + round2 + round3 | b_pair, data = colombia, vcov = ~b_block)
+#>    Res. var(s): b_treat
+#>             H0: b_treat=0
+#>  Strata var(s): b_pair
+#>         Strata: 31
 #> Cluster var(s): b_block
-#> Clusters: 63
-#> Num. reps: 5000
-#> --- 
+#>       Clusters: 63
+#>      Num. reps: 5000
+#> ──────────────────────────────────────────────────────────────────────────────── 
 #>   T(obs)         c         n     p=c/n     SE(p)   CI 2.5%  CI 97.5%  
 #>  -0.1807       520      5000     0.104  0.007102   0.09232    0.1157  
-#> --- 
-#> Note: Confidence interval is with respect to p=c/n 
+#> ──────────────────────────────────────────────────────────────────────────────── 
+#> Note: Confidence interval is with respect to p=c/n. 
 #> Note: c = #{|T| >= |T(obs)|}
 ```
 
@@ -339,7 +332,7 @@ seconds**.
 
 ``` r
 toc
-#> Time difference of 6.652264 secs
+#> Time difference of 6.581697 secs
 ```
 
 Again, we can plot the results. Here’s a slight variation, where we plot

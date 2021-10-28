@@ -143,8 +143,7 @@ experiment. We'll do this by specifying these strata (blocks) as fixed-effects i
 our regression model. I'll also use this as an opportunity to show that that the
 package is fully compatible with piping workflows. This might be useful if you
 don't feel like saving intermediate objects. Here I'll use the new base R pipe 
-(`|>`) that was introduced in R 4.1.1, but the same thing would be possible with
-the popular magrittr pipe (`%>%`).
+(`|>`) that was introduced in R 4.1.1.
 
 ```{r est2}
 # library(fixest) ## Already loaded
