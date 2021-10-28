@@ -38,60 +38,91 @@ of R's normal Arial plotting font.}
 Nice plots of your ritest objects.
 }
 \examples{
-# Naive example using the base nkp dataset. See ?npk.
+#
+## Example 1: Basic functionality
+#
 
+# First estimate a simple linaer regression on the base 'npk' dataset. For
+# this first example, we won't worry about strata or clusters, or other
+# experimental design complications.
 est = lm(yield ~ N + P + K, data = npk)
 
-# Conduct RI on the 'N' (i.e. nitrogen) coefficient. We'll do 1,000 simulations
-# and, just for illustration, limit the number of parallel cores to 2.
-# The 'verbose = TRUE' argument simply prints the results upon completion,
-# including the original regression model summary.
+# Conduct RI on the 'N' (i.e. nitrogen) coefficient. We'll do 1,000
+# simulations and, just for illustration, limit the number of parallel cores
+# to 2 (default is half of the available cores). The 'verbose = TRUE'
+# argument simply prints the results upon completion, including the original
+# regression model summary.
+est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, verbose = TRUE)
 
-est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
+# Result: The RI rejection rate (0.021) is very similar to the parametric
+# p-value (0.019).
 
-# The RI rejection rate (0.021) is very similar to the parametric p-value (0.019).
-
-# We can also plot the results and various options are available to
-# customise the appearance.
-
+# We can plot the results and various options are available to customise the appearance.
 plot(est_ri)
 plot(est_ri, type = 'hist')
 # etc
 
-# The default, ritest() conducts a standard two-sided test against a sharp
-# null hypothesis of zero. You can can specify other null hypotheses as
+# Aside: By default, ritest() conducts a standard two-sided test against a
+# sharp null hypothesis of zero. You can can specify other null hypotheses as
 # part of the 'resampvar' string argument. For example, a (left) one-sided
-# test.
+# test...
 plot(ritest(est, 'N<=0', reps = 1e3, seed = 1234L, pcores = 2L))
-# Or, null values different from zero.
+# ... or, null values different from zero.
 plot(ritest(est, 'N=2', reps = 1e3, seed = 1234L, pcores = 2L))
 
-# More realistic example where we control for the stratified (aka "blocked")
-# experimental design. We'll specify these strata (blocks) as fixed-effects
-# in our regression model.
 
-library(fixest) ## Aside: ritest requires fixest version >= 0.10.0
-est2 = feols(yield ~ N + P + K | block, vcov = 'iid', data = npk)
+#
+## Example 2: Real-life example
+#
 
-# Re-do our RI from before, but this time permute within the 'block' strata.
+# Now that we've seen the basic functionality, here's a more realistic RI
+# example using data from a randomized control trial conducted in Colombia.
+# More details on the dataset -- kindly provided by the study authors -- can
+# be found in the accompanying helpfile ("?colombia"). The most important
+# thing to note is that we need to control for the stratified (aka "blocked")
+# and clustered experimental design.
 
-est2_ri = ritest(est2, 'N', strata = 'block', reps = 1e3, seed = 99L, verbose = TRUE)
+data("colombia")
 
-# Again, the RI rejection rate (0.003) is very similar to the parametric
-# p-value (0.004) from the regression model. You probably want to increase
-# the number of permutation reps for a real problem, though.
+# We'll use the fixest package to estimate our parametric regression model,
+# specifying the strata (here: treatment-control pairs) as fixed-effects and
+# clustering the standard errors by location (here: city blocks).
+library(fixest)
+co_est = feols(dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab |
+                 b_pair + round2 + round3,
+               vcov = ~b_block, data = colombia)
+co_est
 
-# Some asides...
+# Run RI on the 'b_treat' variable, specifying the strata and clusters.
+co_ri = ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block',
+               reps=1e3, seed=123L)
+co_ri
+plot(co_ri, type = 'hist', highlight = 'fill')
+
+# This time, the RI rejection rate (0.11) is noticeably higher than the
+# parametric p-value (0.024) from the regression model.
+
+
+#
+## Some more asides...
+#
 
 # Formula interfaces are supported if you don't like writing variables (i.e.
 # the treatment and/or strata and cluster arguments) as strings.
-
-ritest(est2, ~N, strata = ~block, reps = 1e3, seed = 99L)
+ritest(co_est, ~b_treat, strata=~b_pair, cluster=~b_block, reps=1e3, seed=123L)
 
 # If you don't like the default plot method and would prefer to use ggplot2,
 # then that's easily done. Just extract the beta values from the return object.
-
 library(ggplot2)
-ggplot(data.frame(betas = est2_ri$betas), aes(betas)) + geom_density()
+ggplot(data.frame(betas = co_ri$betas), aes(betas)) + geom_density()
 
+# Exporting to a regression table can be done via the modelsummary package.
+# It is recommended that you explicitly ask for p-values rather than standard
+# errors (the default), especially if you want to compare with the parametric
+# results of the original model. Uncomment these next lines if you would like
+# to see for yourself.
+# library(modelsummary)
+# msummary(list(ols=co_est, ritest=co_ri), statistic = 'p.value',
+#          coef_map = c('b_treat' = 'Treatment'), gof_omit = 'Obs|R2|IC|Log|F',
+#          notes = 'p-values shown in parentheses.')
 }
