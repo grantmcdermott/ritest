@@ -2,11 +2,6 @@
 #' @export
 generics::tidy
 
-#' @importFrom generics glance
-#' @export
-generics::glance
-
-
 #' Tidy an `ritest` object
 #'
 #' @param x An object produced by the `ritest` function.
@@ -43,9 +38,12 @@ tidy.ritest <- function(x,
 }
 
 
+#' @importFrom generics glance
+#' @export
+generics::glance
+
 #' Glance at an `ritest` object
 #'
-#' @param x An object produced by the `ritest` function.
 #' @return A data frame of goodness-of-fit statistics that conforms to the
 #'   `broom` package specifications.
 #' @inherit tidy.ritest params examples
