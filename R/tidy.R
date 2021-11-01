@@ -13,8 +13,8 @@ generics::glance
 #' @param conf.int Logical indicating whether or not to include a confidence
 #'   interval.
 #' @inheritParams ritest
-#' @return A "tidy" `data.frame` of summary statistics that conforms to the
-#'   `broom` package specification.
+#' @return A data frame of summary statistics that conforms to the `broom`
+#'   package specifications.
 #' @export
 #' @examples
 #' est = lm(yield ~ N + P + K, data = npk)
@@ -46,8 +46,8 @@ tidy.ritest <- function(x,
 #' Glance at an `ritest` object
 #'
 #' @param x An object produced by the `ritest` function.
-#' @return A "tidy" `data.frame` of goodness-of-fit statistics that conforms to
-#'   the `broom` package specification.
+#' @return A data frame of goodness-of-fit statistics that conforms to the
+#'   `broom` package specifications.
 #' @inherit tidy.ritest params examples
 #' @export
 glance.ritest <- function(x, ...) {
