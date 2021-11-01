@@ -225,10 +225,11 @@ plot(co_ri, type = 'hist', highlight = 'fill')
 
 One nice feature of the R implementation is that it should complete very 
 quickly. Instead of taking 3 minutes, this time the 5,000 simulations only take
-around **`r floor(toc)` seconds**.
+around **6 seconds**.
 
-```{r toc}
+```{r toc, eval=FALSE}
 toc
+#> Time difference of 6.581697 secs
 ```
 
 As a general observation, the R implementation of `ritest()` doesn't yet offer 
