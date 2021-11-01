@@ -39,7 +39,10 @@ Suggests:
     tinytest,
     ggplot2,
     broom,
-    covr
+    covr,
+    knitr,
+    rmarkdown
 RoxygenNote: 7.1.2
 Depends: 
     R (>= 2.10)
+VignetteBuilder: knitr

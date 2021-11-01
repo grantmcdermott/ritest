@@ -1,0 +1,295 @@
+---
+title: "Introduction to ritest"
+output: rmarkdown::html_vignette
+toc:
+  depth: 2
+vignette: >
+  %\VignetteIndexEntry{ritest}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  cache = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Let's start by loading the **ritest** package. I'll also be using one or two 
+outside packages in the examples that follow to demonstrate some additional 
+functionality, but will hold off loading those for now.
+
+```{r libs, cache=FALSE, message=FALSE}
+library(ritest)
+```
+
+The `ritest()` function supports a variety of arguments, but the basic syntax 
+is
+
+```r
+ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
+```
+
+where: 
+
+- `object` is a model object (e.g. a linear regression).
+- `resampvar` is the variable that you want to resample (i.e. permute). You can
+also specify the sharp null hypothesis that you want to test as part of a 
+character string.
+- `reps` is the number of simulations (i.e. permutations).
+- `strata` is a variable defining the stratification (aka "blocking") of the 
+experimental design, if any.
+- `cluster` is a variable defining the clustering of treatment in the 
+experimental design, if any.
+- `...` are other arguments. This includes the ability to set a random seed for
+reproducibility, controlling the parallelism behaviour, adding a progress bar,
+etc. See `?ritest` for more information.
+
+
+Let's see this functionality in action with the help of some examples.
+
+### Example I: Toy data
+
+Our first example will be a rather naive implementation using the base
+[`nkp`](https://vincentarelbundock.github.io/Rdatasets/doc/MASS/npk.html) 
+dataset.
+
+```{r est}
+est = lm(yield ~ N + P + K, data = npk)
+```
+
+Let's say we're interested in the yield effect of 'N' (i.e. nitrogen).
+We want to know whether our inferential reasoning about this parameter is 
+robust to using RI, as opposed to just relying on the parametric t-test and 
+p-value produced by our linear regression model. We'll do 1,000
+simulations and, just for illustration, limit the number of parallel cores to 2. 
+(The default parallel behaviour will use half of the available cores on a user's
+machine.) 
+The 'verbose = TRUE' argument simply prints the results upon completion,
+including the original regression model summary.
+
+```{r est_ri}
+est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
+```
+
+In this simple case, our parametric results appear to hold up very well. The
+original p-value of 0.019 is very close to the equivalent rejection rate
+of 0.021 that we get with our RI procedure.
+
+We can also visualize this result using the dedicated `plot` method. The function 
+takes several arguments for added customization. But here I'll just show the 
+default plot, which includes vertical lines that denote the simulated (in this 
+case: 95 percent) rejection regions.
+
+```{r plot_est_ri}
+plot(est_ri)
+```
+
+As an aside, note that the RI procedure tests against a standard two-sided null 
+hypothesis of zero. (In the above case: `H0: N1=0`.) We can specify a different
+null hypothesis as part of the `resampvar` string. For example:
+
+```{r plot_est_ri_alt_ho}
+plot(ritest(est, 'N<=2', reps = 1e3, seed = 1234L, pcores = 2L))
+```
+
+Note that I could (and probably should) have estimated a a more realistic model
+that controls for the stratified (aka "blocked") design of the original `npk`
+experiment. This is easily done, but I'll hold off doing so for now since the
+the discussion of strata provides a nice segue to our next example.
+
+### Example II: Real-life data
+
+For our second example, we'll replicate a very helpful
+[blog post](https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata)
+by David McKenzie
+on the original Stata `-ritest-` routine. The dataset in question derives 
+from a randomized control trial about supply chains in Colombia, which David has
+kindly provided for re-use in this package (see: `?colombia`).
+
+The key research question that we're trying to answer below is whether a
+treatment intervention (`b_treat`) lead to a drop in the number of days  
+requiring visits to the _Corabastos_ central market.^[Repeated visits to the 
+market are an expensive and time-consuming exercise for the fresh produce 
+vendors that formed the study population.] 
+Moreover, we want to know if our inference about this treatment effect is robust 
+to RI.
+
+### Stata implementation
+
+As a benchmark, first we recapitulate David's Stata code and output. I won't go 
+into details --- the essential thing to know is that I'm going to run 5,000 RI 
+permutations on a pretty standard fixed-effect model, whilst 
+accounting for the stratified and clustered design of the experiment. 
+
+(Aside: I'm also snipping most of the Stata output, so as to only highlight the 
+main command and result.)
+
+```stata
+. // This next line assumes you have exported the `colombia` dataset from R as a
+. // CSV for Stata to read, e.g. `write.csv(colombia, '~/colombia.csv', row.names = FALSE)`
+. insheet using "~/colombia.csv", comma clear
+
+. 
+. timer on 1
+
+. 
+. ritest b_treat _b[b_treat], cluster(b_block) strata(b_pair) reps(5e3) seed(546): ///
+> areg dayscorab b_treat b_dayscorab miss_b_dayscorab round2 round3, cluster(b_block) a(b_pair)
+
+[snipped]
+
+
+      command:  areg dayscorab b_treat b_dayscorab miss_b_dayscorab round2 round3, cluster(b_block)
+                    a(b_pair)
+        _pm_1:  _b[b_treat]
+  res. var(s):  b_treat
+   Resampling:  Permuting b_treat
+Clust. var(s):  b_block
+     Clusters:  63
+Strata var(s):  b_pair
+       Strata:  31
+
+------------------------------------------------------------------------------
+T            |     T(obs)       c       n   p=c/n   SE(p) [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+       _pm_1 |   -.180738     529    5000  0.1058  0.0043  .0974064   .1146569
+------------------------------------------------------------------------------
+Note: Confidence interval is with respect to p=c/n.
+Note: c = #{|T| >= |T(obs)|}
+
+. 
+. timer off 1
+
+```
+
+Like David, this takes around **3 minutes** to run on my laptop.
+
+```stata
+. timer list
+   1:    183.01 /        1 =     183.0150
+```
+
+### R implementation
+
+Let's replicate the above in R using this package. First, we'll estimate and 
+save the parametric model using `fixest::feols()`.
+
+```{r co_est}
+data("colombia")
+
+library(fixest) ## For fast (high-dimensional) fixed-effects models
+
+co_est = 
+  feols(
+    dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, 
+    vcov = ~b_block, data = colombia
+    )
+co_est
+```
+
+Now, we conduct RI on our model to see whether our key treatment variable 
+(`b_treat`) is sensitive to the imposed parametric constraints. Note that we
+can specify the strata and clusters as additional arguments to `ritest()`. 
+
+```{r co_ri}
+tic = Sys.time() ## timer on
+
+co_ri = ritest(co_est, 'b_treat', cluster='b_block', strata='b_pair', reps=5e3, seed=546L)
+
+toc = Sys.time() - tic ## timer off
+
+## Print the results
+co_ri
+```
+
+Using the same random seed in R and Stata is a bit of performance art. We won't
+get exactly
+the same results across two different languages. But the important thing to note 
+is that they are functionally equivalent (rejection probability of 0.106 vs
+0.104). More importantly, we can see that our inference about the effectiveness
+of treatment in this study is indeed sensitive to RI. Our parametric p-value 
+(0.024) is much lower than the permuted rejection rate (0.104).
+
+Again, we can plot the results. Here's a slight variation, where we plot in
+histogram form and use a fill to highlight the 95% rejection region(s) instead
+of vertical lines.
+
+```{r plot_co_ri}
+plot(co_ri, type = 'hist', highlight = 'fill')
+```
+
+### Benchmarks
+
+One nice feature of the R implementation is that it should complete very 
+quickly. Instead of taking 3 minutes, this time the 5,000 simulations only take
+around **`r floor(toc)` seconds**.
+
+```{r toc}
+toc
+```
+
+As a general observation, the R implementation of `ritest()` doesn't yet offer 
+all of the functionality of the Stata version. For example, it doesn't support
+an external file of resampling weights. However, it does appear to be a lot
+(25x -- 50x) faster and this might make it more suitable for certain types of
+problems.
+
+## Extras and asides
+
+### Regression tables
+
+Support for regression tables is enabled via **ritest's** compatability
+with the **modelsummary** package. I recommend displaying p-values instead of 
+the default standard errors. This is particularly important when comparing 
+against a parametric model, as I do below.
+
+```{r msummary_co_ri}
+library(modelsummary)
+
+msummary(list(lm = co_est, ritest = co_ri), 
+         statistic = 'p.value', 
+         ## These next arguments just make our comparison table look a bit nicer
+         coef_map = c('b_treat' = 'Treatment'), 
+         gof_omit = 'Obs|R2|IC|Log|F',
+         notes = 'p-values shown in parentheses.')
+```
+
+### Formulas
+
+Formula interfaces are supported if you don't like writing variables (i.e.
+the `resampvar` and/or `strata` and `cluster` arguments) as strings. I'll just
+use the default number of reps (i.e. 100) and drop the random seed for this next
+example.
+
+```{r formulas}
+ritest(co_est, ~b_treat, strata=~b_pair, cluster=~b_block)
+```
+
+### ggplot2
+
+If you don't like the default plot method and would prefer to use **ggplot2**,
+then that's easily done. Just extract the beta values from the return object.
+
+```{r ggplot2_co_ri}
+library(ggplot2)
+
+ggplot(data.frame(betas = co_ri$betas), aes(betas)) + 
+  geom_density() +
+  theme_minimal()
+```
+
+### Piping workflows
+
+The **ritest** package is fully compatible with piping workflows. This might be
+useful if you don't feel like saving intermediate objects. Here I'll demonstrate 
+using the new base R pipe (`|>`) that was introduced in R 4.1.1, but the same 
+principal would carry over to popular magrittr pipe (`%>%`).
+
+```{r est2_pipe}
+feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
+  ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>
+  plot()
+```
