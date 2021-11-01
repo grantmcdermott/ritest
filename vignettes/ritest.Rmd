@@ -285,11 +285,15 @@ ggplot(data.frame(betas = co_ri$betas), aes(betas)) +
 
 The **ritest** package is fully compatible with piping workflows. This might be
 useful if you don't feel like saving intermediate objects. Here I'll demonstrate 
-using the new base R pipe (`|>`) that was introduced in R 4.1.1, but the same 
+using the new base R pipe (`|>`) that was introduced in R 4.1.0, but the same 
 principal would carry over to popular magrittr pipe (`%>%`).
 
 ```{r est2_pipe}
-feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
+## Only run this code if you have R 4.1 or above
+if (getRversion() >= "4.1") {
+  feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
   ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>
   plot()
+}
+
 ```
