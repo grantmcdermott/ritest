@@ -15,8 +15,8 @@ interval.}
 \item{...}{Additional arguments. Currently ignored.}
 }
 \value{
-A "tidy" `data.frame` of summary statistics that conforms to the
-  `broom` package specification.
+A data frame of summary statistics that conforms to the `broom`
+  package specifications.
 }
 \description{
 Tidy an `ritest` object

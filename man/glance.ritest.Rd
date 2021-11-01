@@ -12,8 +12,8 @@
 \item{...}{Additional arguments. Currently ignored.}
 }
 \value{
-A "tidy" `data.frame` of goodness-of-fit statistics that conforms to
-  the `broom` package specification.
+A data frame of goodness-of-fit statistics that conforms to the
+  `broom` package specifications.
 }
 \description{
 Glance at an `ritest` object
