@@ -19,7 +19,8 @@ Description: An experimental port of the `ritest` Stata routine by Simon Heß.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/grantmcdermott/ritest
+URL: https://github.com/grantmcdermott/ritest,
+    http://grantmcdermott.com/ritest
 BugReports: https://github.com/grantmcdermott/ritest/issues
 Imports:
     utils,
