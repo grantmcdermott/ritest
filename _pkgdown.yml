@@ -1,4 +1,19 @@
 url: http://grantmcdermott.com/ritest
 template:
   bootstrap: 5
-
+reference:
+- title: "Main functions"
+  desc: "Main functions and methods"
+- contents:
+  - ritest
+  - print.ritest
+  - plot.ritest
+- title: "Miscellaneous"
+  desc: "Other methods and helpers"
+- contents:
+  - tidy.ritest
+  - glance.ritest
+- title: "Datasets"
+  desc: "Datasets provided with this package."
+- contents:
+  - colombia
