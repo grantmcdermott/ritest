@@ -83,27 +83,4 @@ plot(co_ri, type = 'hist', highlight = 'fill')
 # This time, the RI rejection rate (0.11) is noticeably higher than the
 # parametric p-value (0.024) from the regression model.
 
-
-#
-## Some more asides...
-#
-
-# Formula interfaces are supported if you don't like writing variables (i.e.
-# the treatment and/or strata and cluster arguments) as strings.
-ritest(co_est, ~b_treat, strata=~b_pair, cluster=~b_block, reps=1e3, seed=123L)
-
-# If you don't like the default plot method and would prefer to use ggplot2,
-# then that's easily done. Just extract the beta values from the return object.
-library(ggplot2)
-ggplot(data.frame(betas = co_ri$betas), aes(betas)) + geom_density()
-
-# Exporting to a regression table can be done via the modelsummary package.
-# It is recommended that you explicitly ask for p-values rather than standard
-# errors (the default), especially if you want to compare with the parametric
-# results of the original model. Uncomment these next lines if you would like
-# to see for yourself.
-# library(modelsummary)
-# msummary(list(ols=co_est, ritest=co_ri), statistic = 'p.value',
-#          coef_map = c('b_treat' = 'Treatment'), gof_omit = 'Obs|R2|IC|Log|F',
-#          notes = 'p-values shown in parentheses.')
 }
