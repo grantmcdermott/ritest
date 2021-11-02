@@ -3,7 +3,7 @@ pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
   ritest: ritest.html
-last_built: 2021-11-02T18:38Z
+last_built: 2021-11-02T19:18Z
 urls:
   reference: http://grantmcdermott.com/ritest/reference
   article: http://grantmcdermott.com/ritest/articles
