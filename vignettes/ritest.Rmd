@@ -290,9 +290,9 @@ principal would carry over to popular magrittr pipe (`%>%`).
 ```{r est2_pipe}
 ## Only run this code if you have R 4.1 or above
 if (getRversion() >= "4.1") {
-  feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |>
-  ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>
-  plot()
+  feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |> # model
+  ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>      # ritest
+  plot()                                                        # plot
 }
 
 ```
