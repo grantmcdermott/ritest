@@ -1,8 +1,6 @@
 ---
 title: "Introduction to ritest"
 output: rmarkdown::html_vignette
-toc:
-  depth: 2
 vignette: >
   %\VignetteIndexEntry{ritest}
   %\VignetteEngine{knitr::rmarkdown}
@@ -50,7 +48,7 @@ etc. See `?ritest` for more information.
 
 Let's see this functionality in action with the help of some examples.
 
-### Example I: Toy data
+## Example I: Toy data
 
 Our first example will be a rather naive implementation using the base
 [`nkp`](https://vincentarelbundock.github.io/Rdatasets/doc/MASS/npk.html) 
@@ -95,25 +93,25 @@ null hypothesis as part of the `resampvar` string. For example:
 plot(ritest(est, 'N<=2', reps = 1e3, seed = 1234L, pcores = 2L))
 ```
 
-Note that I could (and probably should) have estimated a a more realistic model
+Note that we could (and probably should) have estimated a more realistic model
 that controls for the stratified (aka "blocked") design of the original `npk`
-experiment. This is easily done, but I'll hold off doing so for now since the
+experiment. This is easily done, but we'll hold off doing so for now since the
 the discussion of strata provides a nice segue to our next example.
 
-### Example II: Real-life data
+## Example II: Real-life data
 
-For our second example, we'll replicate a very helpful
-[blog post](https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata)
-by David McKenzie
-on the original Stata `-ritest-` routine. The dataset in question derives 
-from a randomized control trial about supply chains in Colombia, which David has
-kindly provided for re-use in this package (see: `?colombia`).
+Our second example will provide a more realistic use-case, where we need to
+account for a _stratified_ and _clustered_ research design. 
+In particular, we'll replicate a real-life experiment that David McKenzie
+describes in a very helpful
+[blog post](https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata) on the original Stata `-ritest-` routine. 
 
-The key research question that we're trying to answer below is whether a
-treatment intervention (`b_treat`) lead to a drop in the number of days  
-requiring visits to the _Corabastos_ central market.^[Repeated visits to the 
-market are an expensive and time-consuming exercise for the fresh produce 
-vendors that formed the study population.] 
+The dataset in question derives from a randomized control trial about supply 
+chains in Colombia, which David has kindly provided for re-use in this package 
+(see: `?colombia`). The key research question that we're trying to answer below 
+is whether a treatment intervention (`b_treat`) led to a drop in the number of 
+days requiring visits to the _Corabastos_ central 
+market.^[Repeated visits to the market are an expensive and time-consuming exercise for the fresh produce vendors that formed the study population.] 
 Moreover, we want to know if our inference about this treatment effect is robust 
 to RI.
 
