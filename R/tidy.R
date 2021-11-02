@@ -49,7 +49,7 @@ generics::glance
 #' @inherit tidy.ritest params examples
 #' @export
 glance.ritest <- function(x, ...) {
-  ret = data.frame(H0 = x$h0, Num.Reps = as.integer(x$reps))
+  ret = data.frame(H0 = x$h0, Num.Reps = sprintf("%s", x$reps))
   if (!is.null(x$strata)) ret$Strata = x$strata
   if (!is.null(x$cluster)) ret$Clusters = x$cluster
   return(ret)
