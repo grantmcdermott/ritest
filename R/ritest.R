@@ -10,14 +10,14 @@
 #' @param object Model object containing the `resampvar` variable. At present,
 #'   only `stats::lm` and `fixest::feols` models are supported.
 #' @param resampvar Character or one-sided formula. The variable (coefficient)
-#'   that you want to test.
+#'   that you want to perform RI on.
 #'   By default, the RI procedure will conduct a standard two-sided test against
 #'   a sharp null hypothesis of zero (i.e. H0: resampvar = 0). Other null
 #'   hypotheses may be specified as part of a character string. These must
 #'   take the form of the resampled variable, followed by an (in)equality sign,
 #'   and then a number. For example 'x>=0' or 'x<=0' would yield respective
 #'   one-sided tests against the zero null. Similarly, you can test against
-#'   values other than zero (e.g. 'x=1' or x>=1). However, note that multiple
+#'   values other than zero (e.g. 'x=1' or 'x>=1'). However, note that multiple
 #'   multiple comparison tests (e.g. 'x1-x2=0') are not yet supported. See
 #'   Examples.
 #' @param reps Integer. The number of repetitions (permutation draws) in the RI
@@ -35,11 +35,12 @@
 #'   see the note on random-number generation below.) But it does
 #'   require additional memory. If no explicit choice is provided, then the
 #'   function will automatically stack as long this implies an additional memory
-#'   overhead less than the `stack_lim` argument. (Note that stacking is only
-#'   relevant if at least one of `strata` or `cluster` are defined.)
+#'   overhead less than the `stack_lim` argument. Note that stacking is only
+#'   relevant if at least one of `strata` or `cluster` are defined.
 #' @param stack_lim Numeric. What is the memory limit (in gigabytes) for
 #'   determining whether the permuted data should be stacked in memory ahead of
-#'   time? Default is 1 GB.
+#'   time? Default is 1 GB. You probably want to increase this if you are
+#'   working with a large dataset and have lots of RAM.
 #' @param parallel Logical. Should the permuted fits be executed in parallel?
 #'   Default is TRUE, with additional options being passed to the `ptype` and
 #'   `pcores` arguments.
@@ -52,13 +53,12 @@
 #'   on the user's machine.
 #' @param seed Integer. Random seed for reproducible results. Note that the
 #'   choice of parallel behaviour can alter results even when using the same
-#'   seed. See the note on random number generation below.
-#' @param pb Logical. Display a progress bar? Default is FALSE. Note that
-#'   progress bars can add a surprising amount of computational overhead to
-#'   iterative functions. I've therefore set the number of updating steps
-#'   --- i.e. via the `nout` argument of [pbapply::pboptions()] --- to 5, which
-#'   should limit this kind of overhead in the event that a user invokes the
-#'   `pb = TRUE` argument.
+#'   seed. See the Note on random number generation below.
+#' @param pb Logical. Display a progress bar? Default is FALSE. Progress bars
+#'   can add a surprising amount of computational overhead to iterative
+#'   functions. I've therefore set the number of updating steps --- i.e. via the
+#'   `nout` argument of [pbapply::pboptions()] --- to 5, which should limit this
+#'   kind of overhead in the event that a user invokes the `pb = TRUE` argument.
 #' @param verbose Logical. Display the underlying model `object` summary and
 #'   `ritest` return value? Default is `FALSE`.
 #' @param ... Additional arguments. Currently ignored.
