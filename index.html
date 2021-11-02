@@ -80,7 +80,7 @@
 <!-- badges: start -->
 
 <p>Conduct <a href="https://dimewiki.worldbank.org/Randomization_Inference"><strong>randomization inference</strong></a> on R model objects.</p>
-<p>This R package is a port of the <a href="https://github.com/simonheb"><code>-ritest-</code></a> Stata routine (by <a href="https://github.com/simonheb">Simon Heß</a>). It doesn’t (yet) try to support all of the features in the Stata version and is currently limited to <code><a href="https://rdrr.io/r/stats/lm.html">lm()</a></code> and <code><a href="https://lrberge.github.io/fixest/reference/feols.html">fixest::feols()</a></code> models. But it does appear to be significantly faster, and aims to support a variety of model classes once it is fully baked.</p>
+<p>This R package is a port of the excellent <a href="https://github.com/simonheb/ritest"><code>-ritest-</code></a> Stata routine by Simon Heß. It doesn’t (yet) try to support all of the features in the Stata version and is currently limited to <code><a href="https://rdrr.io/r/stats/lm.html">lm()</a></code> and <code><a href="https://lrberge.github.io/fixest/reference/feols.html">fixest::feols()</a></code> models. But it does appear to be significantly faster, and aims to support a variety of model classes once it is fully baked.</p>
 <p><a href="#Installation"><code>Installation</code></a> | <a href="#Useage"><code>Useage</code></a> | <a href="#Benchmarks"><code>Benchmarks</code></a> | <a href="#"><code>License</code></a></p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -94,8 +94,8 @@
 <a href="#useage" class="anchor"></a>Useage</h2>
 <p>Here follows a basic example using the <code>colombia</code> dataset that comes bundled with the package. Note that I’ll also use the <code><a href="https://lrberge.github.io/fixest/reference/feols.html">fixest::feols()</a></code> function to estimate the parametric model first.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/grantmcdermott/ritest">ritest</a></span><span class="op">)</span>       <span class="co">## This package</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://lrberge.github.io/fixest/">fixest</a></span><span class="op">)</span>       <span class="co">## For fast (high-dimensional) fixed-effect regressions</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/grantmcdermott/ritest">ritest</a></span><span class="op">)</span>  <span class="co">## This package</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://lrberge.github.io/fixest/">fixest</a></span><span class="op">)</span>  <span class="co">## For fast (high-dimensional) fixed-effect regressions</span>
 
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"colombia"</span><span class="op">)</span>
 
@@ -107,8 +107,7 @@
     <span class="op">)</span></code></pre></div>
 <p>Let’s conduct RI on the treatment variable (<code>b_treat</code>), whilst taking account of the stratified and clustered experimental design.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">co_ri</span> <span class="op">=</span> <span class="fu"><a href="reference/ritest.html">ritest</a></span><span class="op">(</span><span class="va">co_est</span>, <span class="st">'b_treat'</span>, strata<span class="op">=</span><span class="st">'b_pair'</span>, cluster<span class="op">=</span><span class="st">'b_block'</span>, reps<span class="op">=</span><span class="fl">1e3</span>, seed<span class="op">=</span><span class="fl">546L</span><span class="op">)</span>
-<span class="va">co_ri</span>
+<code class="sourceCode R"><span class="fu"><a href="reference/ritest.html">ritest</a></span><span class="op">(</span><span class="va">co_est</span>, <span class="st">'b_treat'</span>, strata<span class="op">=</span><span class="st">'b_pair'</span>, cluster<span class="op">=</span><span class="st">'b_block'</span>, reps<span class="op">=</span><span class="fl">1e3</span>, seed<span class="op">=</span><span class="fl">1234</span><span class="op">)</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt;           Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, data = colombia, vcov = ~b_block)</span>
 <span class="co">#&gt;    Res. var(s): b_treat</span>
@@ -120,15 +119,11 @@
 <span class="co">#&gt;      Num. reps: 1000</span>
 <span class="co">#&gt; ──────────────────────────────────────────────────────────────────────────────── </span>
 <span class="co">#&gt;   T(obs)         c         n     p=c/n     SE(p)   CI 2.5%  CI 97.5%  </span>
-<span class="co">#&gt;  -0.1807       102      1000     0.102   0.01575   0.07609    0.1279  </span>
+<span class="co">#&gt;  -0.1807       107      1000     0.107   0.01609   0.08054    0.1335  </span>
 <span class="co">#&gt; ──────────────────────────────────────────────────────────────────────────────── </span>
 <span class="co">#&gt; Note: Confidence interval is with respect to p=c/n. </span>
 <span class="co">#&gt; Note: c = #{|T| &gt;= |T(obs)|}</span></code></pre></div>
-<p>A default plotting method is provided.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">co_ri</span><span class="op">)</span></code></pre></div>
-<p><img src="reference/figures/README-plot_co_ri-1.png" width="100%"></p>
-<p>For more examples and demonstration of additional features, please see the introductory vignette.</p>
+<p>For more examples and demonstration of additional features — plotting, regression tables, etc. — please see the <a href="http://grantmcdermott.com/ritest/articles/ritest.html"><strong>introductory vignette</strong></a>.</p>
 </div>
 <div id="benchmarks" class="section level2">
 <h2 class="hasAnchor">

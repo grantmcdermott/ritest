@@ -106,9 +106,9 @@
 <code>...</code> are other arguments. This includes the ability to set a random seed for reproducibility, controlling the parallelism behaviour, adding a progress bar, etc. See <code><a href="../reference/ritest.html">?ritest</a></code> for more information.</li>
 </ul>
 <p>Let’s see this functionality in action with the help of some examples.</p>
-<div id="example-i-toy-data" class="section level3">
-<h3 class="hasAnchor">
-<a href="#example-i-toy-data" class="anchor"></a>Example I: Toy data</h3>
+<div id="example-i-toy-data" class="section level2">
+<h2 class="hasAnchor">
+<a href="#example-i-toy-data" class="anchor"></a>Example I: Toy data</h2>
 <p>Our first example will be a rather naive implementation using the base <a href="https://vincentarelbundock.github.io/Rdatasets/doc/MASS/npk.html"><code>nkp</code></a> dataset.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">est</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">yield</span> <span class="op">~</span> <span class="va">N</span> <span class="op">+</span> <span class="va">P</span> <span class="op">+</span> <span class="va">K</span>, data <span class="op">=</span> <span class="va">npk</span><span class="op">)</span></code></pre></div>
@@ -166,15 +166,13 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/ritest.html">ritest</a></span><span class="op">(</span><span class="va">est</span>, <span class="st">'N&lt;=2'</span>, reps <span class="op">=</span> <span class="fl">1e3</span>, seed <span class="op">=</span> <span class="fl">1234L</span>, pcores <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="ritest_files/figure-html/plot_est_ri_alt_ho-1.png" width="700"></p>
-<p>Note that I could (and probably should) have estimated a a more realistic model that controls for the stratified (aka “blocked”) design of the original <code>npk</code> experiment. This is easily done, but I’ll hold off doing so for now since the the discussion of strata provides a nice segue to our next example.</p>
+<p>Note that we could (and probably should) have estimated a more realistic model that controls for the stratified (aka “blocked”) design of the original <code>npk</code> experiment. This is easily done, but we’ll hold off doing so for now since the the discussion of strata provides a nice segue to our next example.</p>
 </div>
-<div id="example-ii-real-life-data" class="section level3">
-<h3 class="hasAnchor">
-<a href="#example-ii-real-life-data" class="anchor"></a>Example II: Real-life data</h3>
-<p>For our second example, we’ll replicate a very helpful <a href="https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata">blog post</a> by David McKenzie on the original Stata <code>-ritest-</code> routine. The dataset in question derives from a randomized control trial about supply chains in Colombia, which David has kindly provided for re-use in this package (see: <code><a href="../reference/colombia.html">?colombia</a></code>).</p>
-<p>The key research question that we’re trying to answer below is whether a treatment intervention (<code>b_treat</code>) lead to a drop in the number of days<br>
-requiring visits to the <em>Corabastos</em> central market.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> Moreover, we want to know if our inference about this treatment effect is robust to RI.</p>
-</div>
+<div id="example-ii-real-life-data" class="section level2">
+<h2 class="hasAnchor">
+<a href="#example-ii-real-life-data" class="anchor"></a>Example II: Real-life data</h2>
+<p>Our second example will provide a more realistic use-case, where we need to account for a <em>stratified</em> and <em>clustered</em> research design. In particular, we’ll replicate a real-life experiment that David McKenzie describes in a very helpful <a href="https://blogs.worldbank.org/impactevaluations/finally-way-do-easy-randomization-inference-stata">blog post</a> on the original Stata <code>-ritest-</code> routine.</p>
+<p>The dataset in question derives from a randomized control trial about supply chains in Colombia, which David has kindly provided for re-use in this package (see: <code><a href="../reference/colombia.html">?colombia</a></code>). The key research question that we’re trying to answer below is whether a treatment intervention (<code>b_treat</code>) led to a drop in the number of days requiring visits to the <em>Corabastos</em> central market.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> Moreover, we want to know if our inference about this treatment effect is robust to RI.</p>
 <div id="stata-implementation" class="section level3">
 <h3 class="hasAnchor">
 <a href="#stata-implementation" class="anchor"></a>Stata implementation</h3>
@@ -280,11 +278,12 @@ requiring visits to the <em>Corabastos</em> central market.<a href="#fn1" class=
 <div id="benchmarks" class="section level3">
 <h3 class="hasAnchor">
 <a href="#benchmarks" class="anchor"></a>Benchmarks</h3>
-<p>One nice feature of the R implementation is that it should complete very quickly. Instead of taking 3 minutes, this time the 5,000 simulations only take around <strong>35 seconds</strong>.</p>
+<p>One nice feature of the R implementation is that it should complete very quickly. Instead of taking 3 minutes, this time the 5,000 simulations only take around <strong>6 seconds</strong>.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">toc</span>
-<span class="co">#&gt; Time difference of 35.05872 secs</span></code></pre></div>
+<span class="co">#&gt; Time difference of 6.581697 secs</span></code></pre></div>
 <p>As a general observation, the R implementation of <code><a href="../reference/ritest.html">ritest()</a></code> doesn’t yet offer all of the functionality of the Stata version. For example, it doesn’t support an external file of resampling weights. However, it does appear to be a lot (25x – 50x) faster and this might make it more suitable for certain types of problems.</p>
+</div>
 </div>
 <div id="extras-and-asides" class="section level2">
 <h2 class="hasAnchor">
@@ -372,7 +371,7 @@ Num.Reps
 <td style="text-align:center;">
 </td>
 <td style="text-align:center;">
-5000.000
+5000
 </td>
 </tr>
 <tr>
@@ -430,11 +429,14 @@ b_pair
 <div id="piping-workflows" class="section level3">
 <h3 class="hasAnchor">
 <a href="#piping-workflows" class="anchor"></a>Piping workflows</h3>
-<p>The <strong>ritest</strong> package is fully compatible with piping workflows. This might be useful if you don’t feel like saving intermediate objects. Here I’ll demonstrate using the new base R pipe (<code>|&gt;</code>) that was introduced in R 4.1.1, but the same principal would carry over to popular magrittr pipe (<code>%&gt;%</code>).</p>
+<p>The <strong>ritest</strong> package is fully compatible with piping workflows. This might be useful if you don’t feel like saving intermediate objects. Here I’ll demonstrate using the new base R pipe (<code>|&gt;</code>) that was introduced in R 4.1.0, but the same principal would carry over to popular magrittr pipe (<code>%&gt;%</code>).</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://lrberge.github.io/fixest/reference/feols.html">feols</a></span><span class="op">(</span><span class="va">yield</span> <span class="op">~</span> <span class="va">N</span> <span class="op">+</span> <span class="va">P</span> <span class="op">+</span> <span class="va">K</span> <span class="op">|</span> <span class="va">block</span>, vcov <span class="op">=</span> <span class="st">'iid'</span>, data <span class="op">=</span> <span class="va">npk</span><span class="op">)</span> |&gt;
+<code class="sourceCode R"><span class="co">## Only run this code if you have R 4.1 or above</span>
+<span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.1"</span><span class="op">)</span> <span class="op">{</span>
+  <span class="fu"><a href="https://lrberge.github.io/fixest/reference/feols.html">feols</a></span><span class="op">(</span><span class="va">yield</span> <span class="op">~</span> <span class="va">N</span> <span class="op">+</span> <span class="va">P</span> <span class="op">+</span> <span class="va">K</span> <span class="op">|</span> <span class="va">block</span>, vcov <span class="op">=</span> <span class="st">'iid'</span>, data <span class="op">=</span> <span class="va">npk</span><span class="op">)</span> |&gt;
   <span class="fu"><a href="../reference/ritest.html">ritest</a></span><span class="op">(</span><span class="st">'N'</span>, strata <span class="op">=</span> <span class="st">'block'</span>, reps <span class="op">=</span> <span class="fl">1e3</span>, seed <span class="op">=</span> <span class="fl">99L</span><span class="op">)</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="op">)</span>
+<span class="op">}</span></code></pre></div>
 <p><img src="ritest_files/figure-html/est2_pipe-1.png" width="700"></p>
 </div>
 </div>

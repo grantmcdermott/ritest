@@ -315,46 +315,6 @@ of R's normal Arial plotting font.</p></td>
 <span class='r-in'><span class='co'># This time, the RI rejection rate (0.11) is noticeably higher than the</span></span>
 <span class='r-in'><span class='co'># parametric p-value (0.024) from the regression model.</span></span>
 <span class='r-in'></span>
-<span class='r-in'></span>
-<span class='r-in'><span class='co'>#</span></span>
-<span class='r-in'><span class='co'>## Some more asides...</span></span>
-<span class='r-in'><span class='co'>#</span></span>
-<span class='r-in'></span>
-<span class='r-in'><span class='co'># Formula interfaces are supported if you don't like writing variables (i.e.</span></span>
-<span class='r-in'><span class='co'># the treatment and/or strata and cluster arguments) as strings.</span></span>
-<span class='r-in'><span class='fu'><a href='ritest.html'>ritest</a></span><span class='op'>(</span><span class='va'>co_est</span>, <span class='op'>~</span><span class='va'>b_treat</span>, strata<span class='op'>=</span><span class='op'>~</span><span class='va'>b_pair</span>, cluster<span class='op'>=</span><span class='op'>~</span><span class='va'>b_block</span>, reps<span class='op'>=</span><span class='fl'>1e3</span>, seed<span class='op'>=</span><span class='fl'>123L</span><span class='op'>)</span></span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>          Call: </span>feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, data = colombia, vcov = ~b_block)</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>   Res. var(s): </span>b_treat</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>            H0: </span>b_treat=0</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'> Strata var(s): </span>b_pair</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>        Strata: </span>31</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>Cluster var(s): </span>b_block</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>      Clusters: </span>63</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> <span style='font-weight: bold;'>     Num. reps: </span>1000</span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> ──────────────────────────────────────────────────────────────────────────────── </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span>   T(obs)         c         n     p=c/n     SE(p)   CI 2.5%  CI 97.5%  </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span>  -0.1807       110      1000      0.11   0.01628   0.08322    0.1368  </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> ──────────────────────────────────────────────────────────────────────────────── </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> Note: Confidence interval is with respect to p=c/n. </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> Note: c = #{|T| &gt;= |T(obs)|} </span>
-<span class='r-out co'><span class='r-pr'>#&gt;</span> </span>
-<span class='r-in'></span>
-<span class='r-in'><span class='co'># If you don't like the default plot method and would prefer to use ggplot2,</span></span>
-<span class='r-in'><span class='co'># then that's easily done. Just extract the beta values from the return object.</span></span>
-<span class='r-in'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://ggplot2.tidyverse.org'>ggplot2</a></span><span class='op'>)</span></span>
-<span class='r-in'><span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span>betas <span class='op'>=</span> <span class='va'>co_ri</span><span class='op'>$</span><span class='va'>betas</span><span class='op'>)</span>, <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/aes.html'>aes</a></span><span class='op'>(</span><span class='va'>betas</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>+</span> <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/geom_density.html'>geom_density</a></span><span class='op'>(</span><span class='op'>)</span></span>
-<span class='r-plt img'><img src='plot.ritest-6.png' alt='' width='700' height='433' /></span>
-<span class='r-in'></span>
-<span class='r-in'><span class='co'># Exporting to a regression table can be done via the modelsummary package.</span></span>
-<span class='r-in'><span class='co'># It is recommended that you explicitly ask for p-values rather than standard</span></span>
-<span class='r-in'><span class='co'># errors (the default), especially if you want to compare with the parametric</span></span>
-<span class='r-in'><span class='co'># results of the original model. Uncomment these next lines if you would like</span></span>
-<span class='r-in'><span class='co'># to see for yourself.</span></span>
-<span class='r-in'><span class='co'># library(modelsummary)</span></span>
-<span class='r-in'><span class='co'># msummary(list(ols=co_est, ritest=co_ri), statistic = 'p.value',</span></span>
-<span class='r-in'><span class='co'>#          coef_map = c('b_treat' = 'Treatment'), gof_omit = 'Obs|R2|IC|Log|F',</span></span>
-<span class='r-in'><span class='co'>#          notes = 'p-values shown in parentheses.')</span></span>
 </pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
