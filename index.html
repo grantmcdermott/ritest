@@ -81,7 +81,6 @@
 
 <p>Conduct <a href="https://dimewiki.worldbank.org/Randomization_Inference"><strong>randomization inference</strong></a> on R model objects.</p>
 <p>This R package is a port of the excellent <a href="https://github.com/simonheb/ritest"><code>-ritest-</code></a> Stata routine by Simon Heß. It doesn’t (yet) try to support all of the features in the Stata version and is currently limited to <code><a href="https://rdrr.io/r/stats/lm.html">lm()</a></code> and <code><a href="https://lrberge.github.io/fixest/reference/feols.html">fixest::feols()</a></code> models. But it does appear to be significantly faster, and aims to support a variety of model classes once it is fully baked.</p>
-<p><a href="#Installation"><code>Installation</code></a> | <a href="#Useage"><code>Useage</code></a> | <a href="#Benchmarks"><code>Benchmarks</code></a> | <a href="#"><code>License</code></a></p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
@@ -89,10 +88,12 @@
 <code class="sourceCode R"><span class="co"># install.packages("remotes")</span>
 <span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"grantmcdermott/ritest"</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="useage" class="section level2">
+<div id="usage" class="section level2">
 <h2 class="hasAnchor">
-<a href="#useage" class="anchor"></a>Useage</h2>
-<p>Here follows a basic example using the <code>colombia</code> dataset that comes bundled with the package. Note that I’ll also use the <code><a href="https://lrberge.github.io/fixest/reference/feols.html">fixest::feols()</a></code> function to estimate the parametric model first.</p>
+<a href="#usage" class="anchor"></a>Usage</h2>
+<p>A detailed walkthrough of the package is provided in the introductory vignette. See <code><a href="articles/ritest.html">vignette("ritest")</a></code>.</p>
+<p>As a quickstart, here follows a basic example using data from a randomized control trial (RCT) that was conducted in Colombia. The dataset is provided with this package.</p>
+<p>First, we use the <code><a href="https://lrberge.github.io/fixest/reference/feols.html">fixest::feols()</a></code> function to estimate the parametric model.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/grantmcdermott/ritest">ritest</a></span><span class="op">)</span>  <span class="co">## This package</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://lrberge.github.io/fixest/">fixest</a></span><span class="op">)</span>  <span class="co">## For fast (high-dimensional) fixed-effect regressions</span>
@@ -102,10 +103,23 @@
 <span class="co">## Parametric model using fixest::feols()</span>
 <span class="va">co_est</span> <span class="op">=</span> 
   <span class="fu"><a href="https://lrberge.github.io/fixest/reference/feols.html">feols</a></span><span class="op">(</span>
-    <span class="va">dayscorab</span> <span class="op">~</span> <span class="va">b_treat</span> <span class="op">+</span> <span class="va">b_dayscorab</span> <span class="op">+</span> <span class="va">miss_b_dayscorab</span> <span class="op">|</span> <span class="va">b_pair</span> <span class="op">+</span> <span class="va">round2</span> <span class="op">+</span> <span class="va">round3</span>, 
+    <span class="va">dayscorab</span> <span class="op">~</span> <span class="va">b_treat</span> <span class="op">+</span> <span class="va">b_dayscorab</span> <span class="op">|</span> <span class="va">b_pair</span> <span class="op">+</span> <span class="va">miss_b_dayscorab</span> <span class="op">+</span> <span class="va">round2</span> <span class="op">+</span> <span class="va">round3</span>, 
     vcov <span class="op">=</span> <span class="op">~</span><span class="va">b_block</span>, data <span class="op">=</span> <span class="va">colombia</span>
-    <span class="op">)</span></code></pre></div>
-<p>Let’s conduct RI on the treatment variable (<code>b_treat</code>), whilst taking account of the stratified and clustered experimental design.</p>
+    <span class="op">)</span>
+<span class="va">co_est</span>
+<span class="co">#&gt; OLS estimation, Dep. Var.: dayscorab</span>
+<span class="co">#&gt; Observations: 2,346 </span>
+<span class="co">#&gt; Fixed-effects: b_pair: 31,  miss_b_dayscorab: 2,  round2: 2,  round3: 2</span>
+<span class="co">#&gt; Standard-errors: Clustered (b_block) </span>
+<span class="co">#&gt;              Estimate Std. Error  t value  Pr(&gt;|t|)    </span>
+<span class="co">#&gt; b_treat     -0.180738   0.078174 -2.31201  0.024113 *  </span>
+<span class="co">#&gt; b_dayscorab  0.524761   0.029423 17.83478 &lt; 2.2e-16 ***</span>
+<span class="co">#&gt; ---</span>
+<span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span>
+<span class="co">#&gt; RMSE: 1.91167     Adj. R2: 0.282038</span>
+<span class="co">#&gt;                 Within R2: 0.21367</span></code></pre></div>
+<p>Our key treatment variable (<code>b_treat</code>) is deemed to be statistically significant (p-value of 0.024), even as we cluster the standard errors.</p>
+<p>But let’s see if this result is robust to randomization inference (RI). We’ll perform 1,000 RI permutations on <code>b_treat</code>, whilst taking into account the stratified and clustered experimental design of the underlying RCT.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/ritest.html">ritest</a></span><span class="op">(</span><span class="va">co_est</span>, <span class="st">'b_treat'</span>, strata<span class="op">=</span><span class="st">'b_pair'</span>, cluster<span class="op">=</span><span class="st">'b_block'</span>, reps<span class="op">=</span><span class="fl">1e3</span>, seed<span class="op">=</span><span class="fl">1234</span><span class="op">)</span>
 <span class="co">#&gt; </span>
@@ -123,12 +137,18 @@
 <span class="co">#&gt; ──────────────────────────────────────────────────────────────────────────────── </span>
 <span class="co">#&gt; Note: Confidence interval is with respect to p=c/n. </span>
 <span class="co">#&gt; Note: c = #{|T| &gt;= |T(obs)|}</span></code></pre></div>
-<p>For more examples and demonstration of additional features — plotting, regression tables, etc. — please see the <a href="http://grantmcdermott.com/ritest/articles/ritest.html"><strong>introductory vignette</strong></a>.</p>
+<p>The simulated p-value is noticeably larger than the parametric one (0.107 vs 0.024), suggesting that our parametric model is overstating the effectiveness of treatment.</p>
+<p>For more examples and additional features — plotting, regression tables, etc. — please see the <a href="http://grantmcdermott.com/ritest/articles/ritest.html"><strong>introductory vignette</strong></a>.</p>
 </div>
 <div id="benchmarks" class="section level2">
 <h2 class="hasAnchor">
 <a href="#benchmarks" class="anchor"></a>Benchmarks</h2>
 <p>I generally observe a speed increase of between 25x–50x compared to the Stata version. Again, see the introductory vignette for timed examples.</p>
+</div>
+<div id="other-software" class="section level2">
+<h2 class="hasAnchor">
+<a href="#other-software" class="anchor"></a>Other software</h2>
+<p>Apart from the Stata <a href="https://github.com/simonheb/ritest"><code>-ritest-</code></a> routine, there are several other packages for conducting randomization inference in R. For example, the <a href="https://cran.r-project.org/web/packages/ri/index.html"><strong>ri</strong></a> has been available for nearly a decade. More recently, the successor <a href="https://cran.r-project.org/web/packages/ri2/index.html"><strong>ri2</strong></a> package extends upon the original, with updated syntax and functionality. An advantage of <strong>ri2</strong> is that it integrates with the wider <a href="https://declaredesign.org/">DeclareDesign</a> suite of R packages for experimental and empirical research design. This enables researchers to build RI and other experimental considerations into the incipient design process. On the other hand, this places some restrictions on conducting RI <em>ex post</em> or in quasi-experimental settings (e.g. a study that leverages a natural experiment). For example, you can’t pass an existing regression model object to <code>ri2::conduct_ri()</code>, which is what <code><a href="reference/ritest.html">ritest::ritest()</a></code> was designed for. Your use case will likely determine which software is optimal for you.</p>
 </div>
 <div id="license" class="section level2">
 <h2 class="hasAnchor">
