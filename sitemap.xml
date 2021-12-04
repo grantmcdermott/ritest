@@ -1,13 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://grantmcdermott.com/ritest/404.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/LICENSE-text.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/LICENSE.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/articles/ritest.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/authors.html</loc>
+  </url>
+  <url>
     <loc>http://grantmcdermott.com/ritest/index.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/news/index.html</loc>
   </url>
   <url>
     <loc>http://grantmcdermott.com/ritest/reference/colombia.html</loc>
   </url>
   <url>
     <loc>http://grantmcdermott.com/ritest/reference/glance.ritest.html</loc>
+  </url>
+  <url>
+    <loc>http://grantmcdermott.com/ritest/reference/index.html</loc>
   </url>
   <url>
     <loc>http://grantmcdermott.com/ritest/reference/plot.ritest.html</loc>
@@ -23,8 +47,5 @@
   </url>
   <url>
     <loc>http://grantmcdermott.com/ritest/reference/tidy.ritest.html</loc>
-  </url>
-  <url>
-    <loc>http://grantmcdermott.com/ritest/articles/ritest.html</loc>
   </url>
 </urlset>
