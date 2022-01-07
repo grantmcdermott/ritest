@@ -497,20 +497,7 @@ ritest = function(object,
     ci_parm = confint(object, level = level)
     ci_parm = ci_parm[rownames(ci_parm)==resampvar,]
   } else {
-    glht_summ =
-      if (fixest_obj) {
-        ## Need two minor adjustments for fixest objects, since there's
-        ## currently no dedicated glht.fixest method:
-        ## 1) Suppress harmless (but annoying) warning message about
-        ## unrecognised complete = FALSE argument (passed via ...)
-        ## 2) Need manual DoF override to get right SEs / CIs.
-        summary(suppressWarnings(
-          multcomp::glht(object, h0,
-                         df=fixest::degrees_freedom(object, type = 'resid'), ...)
-          ))
-        } else {
-          summary(multcomp::glht(object, h0, ...))
-        }
+    glht_summ = summary(multcomp::glht(object, h0, ...))
     coeftab = data.frame(glht_summ$test[c("coefficients", "sigma", "tstat", "pvalues")])
     ci_parm = confint(glht_summ)$confint[, c('lwr', 'upr')[ci_sides]]
   }

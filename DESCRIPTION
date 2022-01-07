@@ -32,7 +32,7 @@ Imports:
     data.table,
     pbapply,
     fixest (>= 0.10.0),
-    multcomp,
+    multcomp (>= 1.4-18),
     generics,
     cli
 Suggests: 
