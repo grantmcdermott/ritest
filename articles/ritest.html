@@ -419,15 +419,12 @@ b_block
 <div class="section level3">
 <h3 id="piping-workflows">Piping workflows<a class="anchor" aria-label="anchor" href="#piping-workflows"></a>
 </h3>
-<p>The <strong>ritest</strong> package is fully compatible with piping workflows. This might be useful if you don’t feel like saving intermediate objects. Here I’ll demonstrate using the new base R pipe (<code>|&gt;</code>) that was introduced in R 4.1.0, but the same principal would carry over to popular magrittr pipe (<code>%&gt;%</code>).</p>
+<p>The <strong>ritest</strong> package is fully compatible with piping workflows. This might be useful if you don’t feel like saving intermediate objects. Uncomment the code chunk below to see an example using the new base R pipe (<code>|&gt;</code>) that was introduced in R 4.1.0. But the same principal would carry over to popular magrittr pipe (<code>%&gt;%</code>).</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Only run this code if you have R 4.1 or above</span>
-<span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.1"</span><span class="op">)</span> <span class="op">{</span>
-  <span class="fu"><a href="https://lrberge.github.io/fixest/reference/feols.html" class="external-link">feols</a></span><span class="op">(</span><span class="va">yield</span> <span class="op">~</span> <span class="va">N</span> <span class="op">+</span> <span class="va">P</span> <span class="op">+</span> <span class="va">K</span> <span class="op">|</span> <span class="va">block</span>, vcov <span class="op">=</span> <span class="st">'iid'</span>, data <span class="op">=</span> <span class="va">npk</span><span class="op">)</span> |&gt; <span class="co"># model</span>
-  <span class="fu"><a href="../reference/ritest.html">ritest</a></span><span class="op">(</span><span class="st">'N'</span>, strata <span class="op">=</span> <span class="st">'block'</span>, reps <span class="op">=</span> <span class="fl">1e3</span>, seed <span class="op">=</span> <span class="fl">99L</span><span class="op">)</span> |&gt;      <span class="co"># ritest</span>
-  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span>                                                        <span class="co"># plot</span>
-<span class="op">}</span></code></pre></div>
-<p><img src="ritest_files/figure-html/est2_pipe-1.png" width="700"></p>
+<code class="sourceCode R"><span class="co">## Uncomment and run this code if you have R 4.1 or above</span>
+<span class="co"># feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |&gt; # model</span>
+<span class="co">#   ritest('N', strata = 'block', reps = 1e3, seed = 99L) |&gt;      # ritest</span>
+<span class="co">#   plot()                                                        # plot</span></code></pre></div>
 </div>
 </div>
 
