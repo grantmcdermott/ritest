@@ -111,8 +111,8 @@ Stata version. Again, see the introductory vignette for timed examples.
 Apart from the Stata [`-ritest-`](https://github.com/simonheb/ritest)
 routine, there are several other packages for conducting randomization
 inference in R. For example, the
-[**ri**](https://cran.r-project.org/web/packages/ri/index.html) has been
-available for nearly a decade. More recently, the successor
+[**ri**](https://cran.r-project.org/web/packages/ri/index.html) package
+has been available for nearly a decade. More recently, the successor
 [**ri2**](https://cran.r-project.org/web/packages/ri2/index.html)
 package extends upon the original, with updated syntax and
 functionality. An advantage of **ri2** is that it integrates with the
@@ -123,8 +123,8 @@ design process. On the other hand, this places some restrictions on
 conducting RI *ex post* or in quasi-experimental settings (e.g. a study
 that leverages a natural experiment). For example, you can’t pass an
 existing regression model object to `ri2::conduct_ri()`, which is what
-`ritest::ritest()` was designed for. Your use case will likely determine
-which software is optimal for you.
+**ritest** was designed for. Your use case will likely determine which
+software is optimal for you.
 
 ## License
 
