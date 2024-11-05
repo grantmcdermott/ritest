@@ -9,8 +9,9 @@
 #'
 #' @param object Model object containing the `resampvar` variable. At present,
 #'   only `stats::lm` and `fixest::feols` models are supported.
-#' @param resampvar Character or one-sided formula. The variable (coefficient)
-#'   that you want to perform RI on.
+#' @param resampvar The variable (coefficient) that you want to perform RI on.
+#'   Can be an unquoted variable name, a string (i.e., a quoted variable name),
+#'   or a one-side formula.
 #'   By default, the RI procedure will conduct a standard two-sided test against
 #'   a sharp null hypothesis of zero (i.e. H0: resampvar = 0). Other null
 #'   hypotheses may be specified as part of a character string. These must
@@ -23,10 +24,11 @@
 #' @param reps Integer. The number of repetitions (permutation draws) in the RI
 #'   simulation. Default is 100, but you probably want more that that. Young
 #'   (2019) finds that rejection rates stabilise at around 2,000 draws.
-#' @param strata Character or one-sided formula. Permute `resampvar` within
-#'   strata (AKA blocks)? See Details and Examples below.
-#' @param cluster Character or one-sided formula. Keep `resampvar` constant
-#'   within clusters? See Details and Examples below.
+#' @param strata Strata variable that `resampvar` should be permuted within.
+#'   Relevant if the experiment followed a stratified (AKA "blocked") research
+#'   design. See Details and Examples below.
+#' @param cluster Cluster variable(s) that `resampvar` should be held constant
+#'   within? See Details and Examples below.
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param stack Logical. Should the permuted data be stacked in memory all at
 #'   once, rather than being recalculated during each iteration? Stacking takes
