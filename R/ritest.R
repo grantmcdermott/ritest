@@ -208,6 +208,13 @@ ritest = function(object,
   ## Silence NSE notes in R CMD check. See:
   ## https://cran.r-project.org/web/packages/data.table/vignettes/datatable-importing.html#globals
   orig_order = .ii = treat = nn = treat_samp = NULL
+  
+  ## NSE ----
+  resampvar = gsub("\"|^~", "", deparse1(substitute(resampvar)))
+  strata = gsub("\"|^~", "", deparse1(substitute(strata)))
+  if (identical(strata, "NULL")) strata = NULL 
+  if (!is.null(cluster)) cluster = gsub("\"|^~", "", deparse1(substitute(cluster)))
+  if (identical(cluster, "NULL")) cluster = NULL 
 
   ## Temp vars that we'll be using later
   DT = DATA = strata_split = cluster_split = split_list = cl = NULL
@@ -218,22 +225,16 @@ ritest = function(object,
     on.exit(pbapply::pboptions(opb))
   }
 
-  if (inherits(resampvar, "formula")) {
-    resampvar = paste0(resampvar)[2]
+  resampvar = gsub('[[:space:]]', '', resampvar)
+  h0 = resampvar
+  resampvar = gsub('=.*|>.*|<.*', '', resampvar)
+  if (resampvar==h0) {
     h0_symbol = '='
     h0_value = 0L
   } else {
-    resampvar = gsub('[[:space:]]', '', resampvar)
-    h0 = resampvar
-    resampvar = gsub('=.*|>.*|<.*', '', resampvar)
-    if (resampvar==h0) {
-      h0_symbol = '='
-      h0_value = 0L
-    } else {
-      h0_value = as.numeric(gsub('.*=|.*>|.*<', '', gsub(resampvar, '', h0)))
-      h0_symbol = sub(h0_value, '', gsub(resampvar, '', h0, fixed = TRUE))
-      if (!grepl('=$', h0_symbol)) h0_symbol = paste0(h0_symbol, '=')
-    }
+    h0_value = as.numeric(gsub('.*=|.*>|.*<', '', gsub(resampvar, '', h0)))
+    h0_symbol = sub(h0_value, '', gsub(resampvar, '', h0, fixed = TRUE))
+    if (!grepl('=$', h0_symbol)) h0_symbol = paste0(h0_symbol, '=')
   }
 
   if(!is.null(seed)) {
