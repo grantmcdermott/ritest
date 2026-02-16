@@ -9,8 +9,9 @@
 #'
 #' @param object Model object containing the `resampvar` variable. At present,
 #'   only `stats::lm` and `fixest::feols` models are supported.
-#' @param resampvar Character or one-sided formula. The variable (coefficient)
-#'   that you want to perform RI on.
+#' @param resampvar The variable (coefficient) that you want to perform RI on.
+#'   Can be provided as a bare (unquoted) variable name, a character string, or
+#'   a one-sided formula.
 #'   By default, the RI procedure will conduct a standard two-sided test against
 #'   a sharp null hypothesis of zero (i.e. H0: resampvar = 0). Other null
 #'   hypotheses may be specified as part of a character string. These must
@@ -23,10 +24,12 @@
 #' @param reps Integer. The number of repetitions (permutation draws) in the RI
 #'   simulation. Default is 100, but you probably want more that that. Young
 #'   (2019) finds that rejection rates stabilise at around 2,000 draws.
-#' @param strata Character or one-sided formula. Permute `resampvar` within
-#'   strata (AKA blocks)? See Details and Examples below.
-#' @param cluster Character or one-sided formula. Keep `resampvar` constant
-#'   within clusters? See Details and Examples below.
+#' @param strata Permute `resampvar` within strata (AKA blocks)? Can be
+#'   provided as a bare variable name, character string, or one-sided formula.
+#'   See Details and Examples below.
+#' @param cluster Keep `resampvar` constant within clusters? Can be provided as
+#'   a bare variable name, character string, or one-sided formula. See Details
+#'   and Examples below.
 #' @param level Numeric. The desired confidence level. Default if 0.95.
 #' @param stack Logical. Should the permuted data be stacked in memory all at
 #'   once, rather than being recalculated during each iteration? Stacking takes
@@ -180,7 +183,8 @@
 #' co_est
 #'
 #' # Run RI on the 'b_treat' variable, specifying the strata and clusters.
-#' co_ri = ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block',
+#' # All three input styles work: bare names, strings, or formulas.
+#' co_ri = ritest(co_est, b_treat, strata = b_pair, cluster = b_block,
 #'                reps=1e3, seed=123L)
 #' co_ri
 #' plot(co_ri, type = 'hist', highlight = 'fill')
@@ -204,6 +208,20 @@ ritest = function(object,
                   pb = FALSE,
                   verbose = FALSE,
                   ...) {
+
+  ## NSE ----
+  resampvar_sub = substitute(resampvar)
+  if (is.symbol(resampvar_sub)) {
+    resampvar = deparse(resampvar_sub)
+  }
+  strata_sub = substitute(strata)
+  if (is.symbol(strata_sub) && !identical(strata_sub, quote(NULL))) {
+    strata = deparse(strata_sub)
+  }
+  cluster_sub = substitute(cluster)
+  if (is.symbol(cluster_sub) && !identical(cluster_sub, quote(NULL))) {
+    cluster = deparse(cluster_sub)
+  }
 
   ## Silence NSE notes in R CMD check. See:
   ## https://cran.r-project.org/web/packages/data.table/vignettes/datatable-importing.html#globals
@@ -254,7 +272,7 @@ ritest = function(object,
   object_summ = summary(object, lean = TRUE)
   object_summ_string = paste(capture.output(object_summ), collapse = '\n')
   call_string = paste(deparse(object$call), collapse = '')
-  call_string = gsub("\"", "\'", trimws(gsub("\\s+", " ", call_string)))
+  call_string = gsub("\"", "'", trimws(gsub("\\s+", " ", call_string)))
 
   Xmat = model.matrix(object)
 
@@ -549,4 +567,3 @@ ritest = function(object,
 
   return(out)
 }
-
