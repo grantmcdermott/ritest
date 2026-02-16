@@ -261,9 +261,10 @@ msummary(list(lm = co_est, ritest = co_ri),
 If you don't feel like quoting the variable arguments (i.e. `resampvar` & co.),
 then you can also pass them as unquoted NSE or one-side formulas. For example:
 
-```{r formulas}
-# ritest(co_est, ~b_treat, strata = ~b_pair, cluster = ~b_block) # formula
-ritest(co_est, b_treat, strata = b_pair, cluster = b_block)      # NSE
+```{r nse}
+# ritest(co_est, 'b_treat', strata = 'b_pair', cluster = 'b_block') # strings
+# ritest(co_est, ~b_treat, strata = ~b_pair, cluster = ~b_block)    # formulae
+ritest(co_est, b_treat, strata = b_pair, cluster = b_block)         # NSE
 ```
 
 ### ggplot2
