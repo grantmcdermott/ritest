@@ -5,6 +5,8 @@
 
 <!-- badges: start -->
 
+[![R-universe status
+badge](https://grantmcdermott.r-universe.dev/ritest/badges/version)](https://grantmcdermott.r-universe.dev/ritest)
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
 [![Codecov test
 coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/master/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=master)
@@ -23,9 +25,14 @@ variety of model classes once it is fully baked.
 
 ## Installation
 
+**ritest** is not on CRAN yet, but can be installed from
+[R-universe](https://grantmcdermott.R-universe.dev/).
+
 ``` r
-# install.packages("remotes")
-remotes::install_github("grantmcdermott/ritest")
+install.packages(
+  "ritest",
+  repos = c("https://grantmcdermott.r-universe.dev", "https://cloud.r-project.org")
+)
 ```
 
 ## Usage
@@ -54,7 +61,7 @@ co_est =
     )
 co_est
 #> OLS estimation, Dep. Var.: dayscorab
-#> Observations: 2,346 
+#> Observations: 2,346
 #> Fixed-effects: b_pair: 31,  miss_b_dayscorab: 2,  round2: 2,  round3: 2
 #> Standard-errors: Clustered (b_block) 
 #>              Estimate Std. Error  t value  Pr(>|t|)    
@@ -77,7 +84,7 @@ underlying RCT.
 ``` r
 ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block', reps=1e3, seed=1234)
 #> 
-#>           Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, data = colombia, vcov = ~b_block)
+#>           Call: feols(fml = dayscorab ~ b_treat + b_dayscorab | b_pair + miss_b_dayscorab + round2 + round3, data = colombia, vcov = ~b_block)
 #>    Res. var(s): b_treat
 #>             H0: b_treat=0
 #>  Strata var(s): b_pair
@@ -85,10 +92,10 @@ ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block', reps=1e3, seed=123
 #> Cluster var(s): b_block
 #>       Clusters: 63
 #>      Num. reps: 1000
-#> ──────────────────────────────────────────────────────────────────────────────── 
+#> ─────────────────────────────────────────────────────────────────────────── 
 #>   T(obs)         c         n     p=c/n     SE(p)   CI 2.5%  CI 97.5%  
 #>  -0.1807       107      1000     0.107   0.01609   0.08054    0.1335  
-#> ──────────────────────────────────────────────────────────────────────────────── 
+#> ─────────────────────────────────────────────────────────────────────────── 
 #> Note: Confidence interval is with respect to p=c/n. 
 #> Note: c = #{|T| >= |T(obs)|}
 ```

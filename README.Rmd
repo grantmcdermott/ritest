@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 # ritest
 
 <!-- badges: start -->
+[![R-universe status badge](https://grantmcdermott.r-universe.dev/ritest/badges/version)](https://grantmcdermott.r-universe.dev/ritest)
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
 [![Codecov test coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/master/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=master)
 <!-- badges: end -->
@@ -33,9 +34,14 @@ is fully baked.
 
 ## Installation
 
+**ritest** is not on CRAN yet, but can be installed from
+[R-universe](https://grantmcdermott.R-universe.dev/).
+
 ``` r
-# install.packages("remotes")
-remotes::install_github("grantmcdermott/ritest")
+install.packages(
+  "ritest",
+  repos = c("https://grantmcdermott.r-universe.dev", "https://cloud.r-project.org")
+)
 ```
 
 ## Usage
