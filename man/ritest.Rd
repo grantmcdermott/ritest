@@ -26,8 +26,9 @@ ritest(
 \item{object}{Model object containing the `resampvar` variable. At present,
 only `stats::lm` and `fixest::feols` models are supported.}
 
-\item{resampvar}{Character or one-sided formula. The variable (coefficient)
-that you want to perform RI on.
+\item{resampvar}{The variable (coefficient) that you want to perform RI on.
+Can be provided as a bare (unquoted) variable name, a character string, or
+a one-sided formula.
 By default, the RI procedure will conduct a standard two-sided test against
 a sharp null hypothesis of zero (i.e. H0: resampvar = 0). Other null
 hypotheses may be specified as part of a character string. These must
@@ -42,11 +43,13 @@ Examples.}
 simulation. Default is 100, but you probably want more that that. Young
 (2019) finds that rejection rates stabilise at around 2,000 draws.}
 
-\item{strata}{Character or one-sided formula. Permute `resampvar` within
-strata (AKA blocks)? See Details and Examples below.}
+\item{strata}{Permute `resampvar` within strata (AKA blocks)? Can be
+provided as a bare variable name, character string, or one-sided formula.
+See Details and Examples below.}
 
-\item{cluster}{Character or one-sided formula. Keep `resampvar` constant
-within clusters? See Details and Examples below.}
+\item{cluster}{Keep `resampvar` constant within clusters? Can be provided as
+a bare variable name, character string, or one-sided formula. See Details
+and Examples below.}
 
 \item{level}{Numeric. The desired confidence level. Default if 0.95.}
 
@@ -208,7 +211,8 @@ co_est = feols(dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab |
 co_est
 
 # Run RI on the 'b_treat' variable, specifying the strata and clusters.
-co_ri = ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block',
+# All three input styles work: bare names, strings, or formulas.
+co_ri = ritest(co_est, b_treat, strata = b_pair, cluster = b_block,
                reps=1e3, seed=123L)
 co_ri
 plot(co_ri, type = 'hist', highlight = 'fill')
