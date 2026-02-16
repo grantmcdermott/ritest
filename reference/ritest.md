@@ -38,8 +38,9 @@ ritest(
 
 - resampvar:
 
-  Character or one-sided formula. The variable (coefficient) that you
-  want to perform RI on. By default, the RI procedure will conduct a
+  The variable (coefficient) that you want to perform RI on. Can be
+  provided as a bare (unquoted) variable name, a character string, or a
+  one-sided formula. By default, the RI procedure will conduct a
   standard two-sided test against a sharp null hypothesis of zero (i.e.
   H0: resampvar = 0). Other null hypotheses may be specified as part of
   a character string. These must take the form of the resampled
@@ -59,13 +60,15 @@ ritest(
 
 - strata:
 
-  Character or one-sided formula. Permute \`resampvar\` within strata
-  (AKA blocks)? See Details and Examples below.
+  Permute \`resampvar\` within strata (AKA blocks)? Can be provided as a
+  bare variable name, character string, or one-sided formula. See
+  Details and Examples below.
 
 - cluster:
 
-  Character or one-sided formula. Keep \`resampvar\` constant within
-  clusters? See Details and Examples below.
+  Keep \`resampvar\` constant within clusters? Can be provided as a bare
+  variable name, character string, or one-sided formula. See Details and
+  Examples below.
 
 - level:
 
@@ -322,7 +325,8 @@ co_est
 #>                 Within R2: 0.266002
 
 # Run RI on the 'b_treat' variable, specifying the strata and clusters.
-co_ri = ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block',
+# All three input styles work: bare names, strings, or formulas.
+co_ri = ritest(co_est, b_treat, strata = b_pair, cluster = b_block,
                reps=1e3, seed=123L)
 co_ri
 #> 

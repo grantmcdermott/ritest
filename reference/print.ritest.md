@@ -144,7 +144,8 @@ co_est
 #>                 Within R2: 0.266002
 
 # Run RI on the 'b_treat' variable, specifying the strata and clusters.
-co_ri = ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block',
+# All three input styles work: bare names, strings, or formulas.
+co_ri = ritest(co_est, b_treat, strata = b_pair, cluster = b_block,
                reps=1e3, seed=123L)
 co_ri
 #> 

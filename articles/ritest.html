@@ -262,7 +262,7 @@ estimate and save the parametric model using
 <span>  <span class="fu"><a href="https://lrberge.github.io/fixest/reference/feols.html" class="external-link">feols</a></span><span class="op">(</span></span>
 <span>    <span class="va">dayscorab</span> <span class="op">~</span> <span class="va">b_treat</span> <span class="op">+</span> <span class="va">b_dayscorab</span> <span class="op">+</span> <span class="va">miss_b_dayscorab</span> <span class="op">|</span> <span class="va">b_pair</span> <span class="op">+</span> <span class="va">round2</span> <span class="op">+</span> <span class="va">round3</span>, </span>
 <span>    vcov <span class="op">=</span> <span class="op">~</span><span class="va">b_block</span>, data <span class="op">=</span> <span class="va">colombia</span></span>
-<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="co">#&gt; NOTE: 1,020 observations removed because of NA values (LHS: 1,020).</span></span>
 <span><span class="va">co_est</span></span>
 <span><span class="co">#&gt; OLS estimation, Dep. Var.: dayscorab</span></span>
@@ -449,15 +449,15 @@ when comparing against a parametric model, as I do below.</p>
 <!-- hack to avoid NA insertion in last line -->
 </div>
 <div class="section level3">
-<h3 id="formulas">Formulas<a class="anchor" aria-label="anchor" href="#formulas"></a>
+<h3 id="nse-and-formula-arguments">NSE and formula arguments<a class="anchor" aria-label="anchor" href="#nse-and-formula-arguments"></a>
 </h3>
-<p>Formula interfaces are supported if you don’t like writing variables
-(i.e. the <code>resampvar</code> and/or <code>strata</code> and
-<code>cluster</code> arguments) as strings. I’ll just use the default
-number of reps (i.e. 100) and drop the random seed for this next
-example.</p>
+<p>If you don’t feel like quoting the variable arguments
+(i.e. <code>resampvar</code> &amp; co.), then you can also pass them as
+unquoted NSE or one-side formulas. For example:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/ritest.html">ritest</a></span><span class="op">(</span><span class="va">co_est</span>, <span class="op">~</span><span class="va">b_treat</span>, strata<span class="op">=</span><span class="op">~</span><span class="va">b_pair</span>, cluster<span class="op">=</span><span class="op">~</span><span class="va">b_block</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># ritest(co_est, 'b_treat', strata = 'b_pair', cluster = 'b_block') # strings</span></span>
+<span><span class="co"># ritest(co_est, ~b_treat, strata = ~b_pair, cluster = ~b_block)    # formulae</span></span>
+<span><span class="fu"><a href="../reference/ritest.html">ritest</a></span><span class="op">(</span><span class="va">co_est</span>, <span class="va">b_treat</span>, strata <span class="op">=</span> <span class="va">b_pair</span>, cluster <span class="op">=</span> <span class="va">b_block</span><span class="op">)</span>         <span class="co"># NSE</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co"><span style="font-weight: bold;">#&gt;           Call: </span>feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, data = colombia, vcov = ~b_block)</span></span>
 <span><span class="co">#&gt; <span style="font-weight: bold;">   Res. var(s): </span>b_treat</span></span>
@@ -493,15 +493,13 @@ values from the return object.</p>
 </h3>
 <p>The <strong>ritest</strong> package is fully compatible with piping
 workflows. This might be useful if you don’t feel like saving
-intermediate objects. Uncomment the code chunk below to see an example
-using the new base R pipe (<code>|&gt;</code>) that was introduced in R
-4.1.0. But the same principal would carry over to popular magrittr pipe
-(<code>%&gt;%</code>).</p>
+intermediate objects. Here is is a simple example using the base
+<code>|&gt;</code> pipe that was introduced in R 4.1.0.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## Uncomment and run this code if you have R 4.1 or above</span></span>
-<span><span class="co"># feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |&gt; # model</span></span>
-<span><span class="co">#   ritest('N', strata = 'block', reps = 1e3, seed = 99L) |&gt;      # ritest</span></span>
-<span><span class="co">#   plot()                                                        # plot</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://lrberge.github.io/fixest/reference/feols.html" class="external-link">feols</a></span><span class="op">(</span><span class="va">yield</span> <span class="op">~</span> <span class="va">N</span> <span class="op">+</span> <span class="va">P</span> <span class="op">+</span> <span class="va">K</span> <span class="op">|</span> <span class="va">block</span>, vcov <span class="op">=</span> <span class="st">'iid'</span>, data <span class="op">=</span> <span class="va">npk</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># model</span></span>
+<span>  <span class="fu"><a href="../reference/ritest.html">ritest</a></span><span class="op">(</span><span class="st">'N'</span>, strata <span class="op">=</span> <span class="st">'block'</span>, reps <span class="op">=</span> <span class="fl">1e3</span>, seed <span class="op">=</span> <span class="fl">99L</span><span class="op">)</span> <span class="op">|&gt;</span>    <span class="co"># ritest</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="op">)</span>                                                      <span class="co"># plot</span></span></code></pre></div>
+<p><img src="ritest_files/figure-html/est2_pipe-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 </div>
 

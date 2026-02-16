@@ -221,7 +221,7 @@ co_est =
   feols(
     dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, 
     vcov = ~b_block, data = colombia
-    )
+  )
 #> NOTE: 1,020 observations removed because of NA values (LHS: 1,020).
 co_est
 #> OLS estimation, Dep. Var.: dayscorab
@@ -337,15 +337,16 @@ msummary(list(lm = co_est, ritest = co_ri),
 | Clusters                       |             | b_block   |
 | p-values shown in parentheses. |             |           |
 
-### Formulas
+### NSE and formula arguments
 
-Formula interfaces are supported if you don’t like writing variables
-(i.e. the `resampvar` and/or `strata` and `cluster` arguments) as
-strings. I’ll just use the default number of reps (i.e. 100) and drop
-the random seed for this next example.
+If you don’t feel like quoting the variable arguments (i.e. `resampvar`
+& co.), then you can also pass them as unquoted NSE or one-side
+formulas. For example:
 
 ``` r
-ritest(co_est, ~b_treat, strata=~b_pair, cluster=~b_block)
+# ritest(co_est, 'b_treat', strata = 'b_pair', cluster = 'b_block') # strings
+# ritest(co_est, ~b_treat, strata = ~b_pair, cluster = ~b_block)    # formulae
+ritest(co_est, b_treat, strata = b_pair, cluster = b_block)         # NSE
 #> 
 #>           Call: feols(fml = dayscorab ~ b_treat + b_dayscorab + miss_b_dayscorab | b_pair + round2 + round3, data = colombia, vcov = ~b_block)
 #>    Res. var(s): b_treat
@@ -382,17 +383,17 @@ ggplot(data.frame(betas = co_ri$betas), aes(betas)) +
 ### Piping workflows
 
 The **ritest** package is fully compatible with piping workflows. This
-might be useful if you don’t feel like saving intermediate objects.
-Uncomment the code chunk below to see an example using the new base R
-pipe (`|>`) that was introduced in R 4.1.0. But the same principal would
-carry over to popular magrittr pipe (`%>%`).
+might be useful if you don’t feel like saving intermediate objects. Here
+is is a simple example using the base `|>` pipe that was introduced in R
+4.1.0.
 
 ``` r
-## Uncomment and run this code if you have R 4.1 or above
-# feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |> # model
-#   ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>      # ritest
-#   plot()                                                        # plot
+feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |> # model
+  ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>    # ritest
+  plot()                                                      # plot
 ```
+
+![](ritest_files/figure-html/est2_pipe-1.png)
 
 ------------------------------------------------------------------------
 
