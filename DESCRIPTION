@@ -43,7 +43,7 @@ Suggests:
     knitr,
     rmarkdown,
     modelsummary
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.3
 Depends: 
     R (>= 2.10)
 VignetteBuilder: knitr
