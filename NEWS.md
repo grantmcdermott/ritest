@@ -1,4 +1,4 @@
-# ritest 0.1.0 (in development)
+# ritest 0.1.0
 
 * Add pkgdown site: http://grantmcdermott.com/ritest
 
@@ -6,6 +6,8 @@
 
 * Bundle support for different null hypotheses as part of the `resampvar` string
 argument (replaces and extends the previous `pvals` and `h0` arguments).
+
+* Support NSE input for arguments.
 
 # ritest 0.0.1
 
