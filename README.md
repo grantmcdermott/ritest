@@ -9,7 +9,7 @@
 badge](https://grantmcdermott.r-universe.dev/ritest/badges/version)](https://grantmcdermott.r-universe.dev/ritest)
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
 [![Codecov test
-coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/master/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=master)
+coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/main/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=main)
 <!-- badges: end -->
 
 Conduct [**randomization
@@ -18,7 +18,7 @@ R model objects.
 
 This R package is a port of the excellent
 [`-ritest-`](https://github.com/simonheb/ritest) Stata routine by Simon
-Heß. It doesn’t (yet) try to support all of the features in the Stata
+Heß. It doesn't (yet) try to support all of the features in the Stata
 version and is currently limited to `lm()` and `fixest::feols()` models.
 But it does appear to be significantly faster, and aims to support a
 variety of model classes once it is fully baked.
@@ -76,8 +76,8 @@ co_est
 Our key treatment variable (`b_treat`) is deemed to be statistically
 significant (p-value of 0.024), even as we cluster the standard errors.
 
-But let’s see if this result is robust to randomization inference (RI).
-We’ll perform 1,000 RI permutations on `b_treat`, whilst taking into
+But let's see if this result is robust to randomization inference (RI).
+We'll perform 1,000 RI permutations on `b_treat`, whilst taking into
 account the stratified and clustered experimental design of the
 underlying RCT.
 
@@ -127,8 +127,8 @@ wider [DeclareDesign](https://declaredesign.org/) suite of R packages
 for experimental and empirical research design. This enables researchers
 to build RI and other experimental considerations into the incipient
 design process. On the other hand, this places some restrictions on
-conducting RI *ex post* or in quasi-experimental settings (e.g. a study
-that leverages a natural experiment). For example, you can’t pass an
+conducting RI *ex post* or in quasi-experimental settings (e.g. a study
+that leverages a natural experiment). For example, you can't pass an
 existing regression model object to `ri2::conduct_ri()`, which is what
 **ritest** was designed for. Your use case will likely determine which
 software is optimal for you.

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![R-universe status badge](https://grantmcdermott.r-universe.dev/ritest/badges/version)](https://grantmcdermott.r-universe.dev/ritest)
 [![R-CMD-check](https://github.com/grantmcdermott/ritest/workflows/R-CMD-check/badge.svg)](https://github.com/grantmcdermott/ritest/actions)
-[![Codecov test coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/master/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/grantmcdermott/ritest/branch/main/graph/badge.svg)](https://app.codecov.io/gh/grantmcdermott/ritest?branch=main)
 <!-- badges: end -->
 
 Conduct [**randomization inference**](https://dimewiki.worldbank.org/Randomization_Inference)
