@@ -256,7 +256,7 @@ msummary(list(lm = co_est, ritest = co_ri),
          notes = 'p-values shown in parentheses.')
 ```
 
-### NSE
+### NSE and formula arguments
 
 If you don't feel like quoting the variable arguments (i.e. `resampvar` & co.),
 then you can also pass them as unquoted NSE or one-side formulas. For example:
