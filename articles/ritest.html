@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Introduction to ritest • ritest</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction to ritest">
 </head>
@@ -365,13 +365,13 @@ when comparing against a parametric model, as I do below.</p>
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: '8', j: 2 }, { i: '8', j: 3 } ], css_id: 'tinytable_css_n04scpveqzjrw1qzn0c5',}, 
+          { positions: [ { i: '7', j: 2 }, { i: '7', j: 3 } ], css_id: 'tinytable_css_n04scpveqzjrw1qzn0c5',}, 
           { positions: [ { i: '2', j: 2 }, { i: '2', j: 3 } ], css_id: 'tinytable_css_8e7qjktvkfahxkgxib56',}, 
-          { positions: [ { i: '1', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '1', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 } ], css_id: 'tinytable_css_w6e5x9n8a0rj2nb36ijc',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '1', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_w6e5x9n8a0rj2nb36ijc',}, 
           { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_nkgzix9zvl6dff2v4m1a',}, 
-          { positions: [ { i: '8', j: 1 } ], css_id: 'tinytable_css_t3pcw92ixvcn0und20z0',}, 
+          { positions: [ { i: '7', j: 1 } ], css_id: 'tinytable_css_t3pcw92ixvcn0und20z0',}, 
           { positions: [ { i: '2', j: 1 } ], css_id: 'tinytable_css_obh2bbqo0i2j6zstrqif',}, 
-          { positions: [ { i: '1', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 } ], css_id: 'tinytable_css_pnzchepudt2lk1e0cj78',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 } ], css_id: 'tinytable_css_pnzchepudt2lk1e0cj78',}, 
           { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_wjs11y55ga2gtj2jw2nh',}, 
           ];
 
@@ -419,29 +419,24 @@ when comparing against a parametric model, as I do below.</p>
                   <td data-row="3" data-col="3"></td>
                 </tr>
 <tr>
-<td data-row="4" data-col="1">Std.Errors</td>
-                  <td data-row="4" data-col="2">by: b_block</td>
-                  <td data-row="4" data-col="3"></td>
+<td data-row="4" data-col="1">H0</td>
+                  <td data-row="4" data-col="2"></td>
+                  <td data-row="4" data-col="3">b_treat=0</td>
                 </tr>
 <tr>
-<td data-row="5" data-col="1">H0</td>
+<td data-row="5" data-col="1">Num.Reps</td>
                   <td data-row="5" data-col="2"></td>
-                  <td data-row="5" data-col="3">b_treat=0</td>
+                  <td data-row="5" data-col="3">5000</td>
                 </tr>
 <tr>
-<td data-row="6" data-col="1">Num.Reps</td>
+<td data-row="6" data-col="1">Strata</td>
                   <td data-row="6" data-col="2"></td>
-                  <td data-row="6" data-col="3">5000</td>
+                  <td data-row="6" data-col="3">b_pair</td>
                 </tr>
 <tr>
-<td data-row="7" data-col="1">Strata</td>
+<td data-row="7" data-col="1">Clusters</td>
                   <td data-row="7" data-col="2"></td>
-                  <td data-row="7" data-col="3">b_pair</td>
-                </tr>
-<tr>
-<td data-row="8" data-col="1">Clusters</td>
-                  <td data-row="8" data-col="2"></td>
-                  <td data-row="8" data-col="3">b_block</td>
+                  <td data-row="7" data-col="3">b_block</td>
                 </tr>
 </tbody>
 </table>

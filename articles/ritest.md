@@ -5,6 +5,7 @@ two outside packages in the examples that follow to demonstrate some
 additional functionality, but will hold off loading those for now.
 
 ``` r
+
 library(ritest)
 ```
 
@@ -12,6 +13,7 @@ The [`ritest()`](http://grantmcdermott.com/ritest/reference/ritest.md)
 function supports a variety of arguments, but the basic syntax is
 
 ``` r
+
 ritest(object, resampvar, reps=100, strata=NULL, cluster=NULL, ...)
 ```
 
@@ -41,6 +43,7 @@ Our first example will be a rather naive implementation using the base
 dataset.
 
 ``` r
+
 est = lm(yield ~ N + P + K, data = npk)
 ```
 
@@ -55,6 +58,7 @@ simply prints the results upon completion, including the original
 regression model summary.
 
 ``` r
+
 est_ri = ritest(est, 'N', reps = 1e3, seed = 1234L, pcores = 2L, verbose = TRUE)
 #> 
 #> Running 1000 parallel RI simulations as forked processes across 2 CPU cores.
@@ -110,6 +114,7 @@ just show the default plot, which includes vertical lines that denote
 the simulated (in this case: 95 percent) rejection regions.
 
 ``` r
+
 plot(est_ri)
 ```
 
@@ -121,6 +126,7 @@ can specify a different null hypothesis as part of the `resampvar`
 string. For example:
 
 ``` r
+
 plot(ritest(est, 'N<=2', reps = 1e3, seed = 1234L, pcores = 2L))
 ```
 
@@ -147,9 +153,9 @@ this package (see:
 [`?colombia`](http://grantmcdermott.com/ritest/reference/colombia.md)).
 The key research question that we’re trying to answer below is whether a
 treatment intervention (`b_treat`) led to a drop in the number of days
-requiring visits to the *Corabastos* central market.[¹](#fn1) Moreover,
-we want to know if our inference about this treatment effect is robust
-to RI.
+requiring visits to the *Corabastos* central market.[^1] Moreover, we
+want to know if our inference about this treatment effect is robust to
+RI.
 
 ### Stata implementation
 
@@ -213,6 +219,7 @@ and save the parametric model using
 [`fixest::feols()`](https://lrberge.github.io/fixest/reference/feols.html).
 
 ``` r
+
 data("colombia")
 
 library(fixest) ## For fast (high-dimensional) fixed-effects models
@@ -244,6 +251,7 @@ Note that we can specify the strata and clusters as additional arguments
 to [`ritest()`](http://grantmcdermott.com/ritest/reference/ritest.md).
 
 ``` r
+
 tic = Sys.time() ## timer on
 
 co_ri = ritest(co_est, 'b_treat', cluster='b_block', strata='b_pair', reps=5e3, seed=546L)
@@ -282,6 +290,7 @@ in histogram form and use a fill to highlight the 95% rejection
 region(s) instead of vertical lines.
 
 ``` r
+
 plot(co_ri, type = 'hist', highlight = 'fill')
 ```
 
@@ -294,6 +303,7 @@ quickly. Instead of taking 3 minutes, this time the 5,000 simulations
 only take around **6 seconds**.
 
 ``` r
+
 toc
 #> Time difference of 6.581697 secs
 ```
@@ -315,6 +325,7 @@ instead of the default standard errors. This is particularly important
 when comparing against a parametric model, as I do below.
 
 ``` r
+
 library(modelsummary)
 
 msummary(list(lm = co_est, ritest = co_ri), 
@@ -325,17 +336,16 @@ msummary(list(lm = co_est, ritest = co_ri),
          notes = 'p-values shown in parentheses.')
 ```
 
-|                                | lm          | ritest    |
-|--------------------------------|-------------|-----------|
-| Treatment                      | -0.181      | -0.181    |
-|                                | (0.024)     | (0.104)   |
-| RMSE                           | 1.91        |           |
-| Std.Errors                     | by: b_block |           |
-| H0                             |             | b_treat=0 |
-| Num.Reps                       |             | 5000      |
-| Strata                         |             | b_pair    |
-| Clusters                       |             | b_block   |
-| p-values shown in parentheses. |             |           |
+|                                | lm      | ritest    |
+|--------------------------------|---------|-----------|
+| Treatment                      | -0.181  | -0.181    |
+|                                | (0.024) | (0.104)   |
+| RMSE                           | 1.91    |           |
+| H0                             |         | b_treat=0 |
+| Num.Reps                       |         | 5000      |
+| Strata                         |         | b_pair    |
+| Clusters                       |         | b_block   |
+| p-values shown in parentheses. |         |           |
 
 ### NSE and formula arguments
 
@@ -344,6 +354,7 @@ If you don’t feel like quoting the variable arguments (i.e. `resampvar`
 formulas. For example:
 
 ``` r
+
 # ritest(co_est, 'b_treat', strata = 'b_pair', cluster = 'b_block') # strings
 # ritest(co_est, ~b_treat, strata = ~b_pair, cluster = ~b_block)    # formulae
 ritest(co_est, b_treat, strata = b_pair, cluster = b_block)         # NSE
@@ -371,6 +382,7 @@ If you don’t like the default plot method and would prefer to use
 the return object.
 
 ``` r
+
 library(ggplot2)
 
 ggplot(data.frame(betas = co_ri$betas), aes(betas)) + 
@@ -388,6 +400,7 @@ is is a simple example using the base `|>` pipe that was introduced in R
 4.1.0.
 
 ``` r
+
 feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |> # model
   ritest('N', strata = 'block', reps = 1e3, seed = 99L) |>    # ritest
   plot()                                                      # plot
@@ -395,8 +408,6 @@ feols(yield ~ N + P + K | block, vcov = 'iid', data = npk) |> # model
 
 ![](ritest_files/figure-html/est2_pipe-1.png)
 
-------------------------------------------------------------------------
-
-1.  Repeated visits to the market are an expensive and time-consuming
+[^1]: Repeated visits to the market are an expensive and time-consuming
     exercise for the fresh produce vendors that formed the study
     population.

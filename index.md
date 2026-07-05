@@ -19,6 +19,7 @@ support a variety of model classes once it is fully baked.
 [R-universe](https://grantmcdermott.R-universe.dev/).
 
 ``` r
+
 install.packages(
   "ritest",
   repos = c("https://grantmcdermott.r-universe.dev", "https://cloud.r-project.org")
@@ -40,6 +41,7 @@ First, we use the
 function to estimate the parametric model.
 
 ``` r
+
 library(ritest)  ## This package
 library(fixest)  ## For fast (high-dimensional) fixed-effect regressions
 
@@ -74,6 +76,7 @@ account the stratified and clustered experimental design of the
 underlying RCT.
 
 ``` r
+
 ritest(co_est, 'b_treat', strata='b_pair', cluster='b_block', reps=1e3, seed=1234)
 #> 
 #>           Call: feols(fml = dayscorab ~ b_treat + b_dayscorab | b_pair + miss_b_dayscorab + round2 + round3, data = colombia, vcov = ~b_block)
